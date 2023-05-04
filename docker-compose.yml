@@ -1,0 +1,10 @@
+version: '3'
+services:
+    chat:
+        build:
+            context: ./
+        environment:
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+        volumes:
+            - ./pychat:/usr/src/pychat
+        container_name: chat
