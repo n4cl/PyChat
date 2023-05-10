@@ -23,11 +23,20 @@ req_button.addEventListener("click", function() {
 
   xhr.onreadystatechange = function() {
     if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-      new_div.textContent = xhr.responseText;
-      output.appendChild(new_div);
+      const query_div = document.createElement('div');
+      query_div.textContent = message;
+
+      const answer_div = document.createElement('div');
+      const response = JSON.parse(xhr.responseText)
+      answer_div.textContent = response.message;
+
+      new_div.textContent = "";
+      new_div.appendChild(query_div);
+      new_div.appendChild(answer_div);
     }
   }
-  new_div.value = "リクエスト実行中です。しばらくお待ちください。"
+  new_div.textContent = "リクエスト実行中です。しばらくお待ちください。"
+  output.appendChild(new_div);
   xhr.send(data);
 });
 
