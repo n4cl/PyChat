@@ -14,7 +14,7 @@ req_button.addEventListener("click", function() {
   output.appendChild(new_div);
 });
 
-inp_textarea.addEventListener("keyup", function(event) {
+inp_textarea.addEventListener("keypress", function(event) {
     if (event.code === "Enter") {
       req_button.click();
     }
