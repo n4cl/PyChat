@@ -1,0 +1,13 @@
+version: '3'
+services:
+    chat:
+        build:
+            context: ./
+        environment:
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+        ports:
+            - 80:80
+        volumes:
+            - ./app:/usr/local/app
+            - ./nginx/static:/usr/share/nginx/html
+        container_name: chat
