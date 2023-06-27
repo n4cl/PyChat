@@ -4,6 +4,7 @@ from fastapi import FastAPI, status, Response
 from chat import chat_request
 from db import insert_message, insert_message_details, MessageRole
 from custom_exception import RequiredParameterError
+from log import ContextIncludedRoute
 
 
 OPENAI_API_KEY = "OPENAI_API_KEY"
@@ -20,6 +21,7 @@ class ChatRequestBody(BaseModel):
     model: str
 
 app = FastAPI()
+app.router.route_class = ContextIncludedRoute
 
 
 @app.get("/")
