@@ -57,4 +57,4 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
 
     insert_message_details(mid, MessageRole.ASSISTANT, msg)
 
-    return {"message": msg}
+    return {"message": msg, "mid": mid}
