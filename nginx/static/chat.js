@@ -69,7 +69,24 @@ req_button.addEventListener("click", function() {
 });
 
 inp_textarea.addEventListener("keypress", function(event) {
-    if (event.code === "Enter") {
-      req_button.click();
+    if (event.shiftKey) {
+      if (event.code === "Enter") {
+        // keyup でのイベント発火時は改行が入っていない分とベースの高さ分を足す
+        inp_textarea.rows = (inp_textarea.value.match(/\n/g) || []).length + 2;
+        return;
+      }
+      return;
     }
+    if (event.code === "Enter") {
+      event.preventDefault();
+      req_button.click();
+      return;
+    }
+});
+
+inp_textarea.addEventListener("keyup", function(event) {
+  if (event.code === "Backspace") {
+    inp_textarea.rows = (inp_textarea.value.match(/\n/g) || []).length + 1;
+    return;
+  }
 });
