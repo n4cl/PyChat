@@ -29,11 +29,11 @@ def insert_message() -> int:
     conn.commit()
     return res.lastrowid
 
-def insert_message_details(mid: int, role: str, message: str) -> None:
+def insert_message_details(mid: int, role: str, model: str, message: str) -> None:
     """Insert message_details"""
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'INSERT INTO message_details(mid, role, message, create_date) VALUES (?, ?, ?, ?);'
-    cur.execute(sql, (mid, role, message, get_jst_now()))
+    sql = 'INSERT INTO message_details(mid, role, model, message, create_date) VALUES (?, ?, ?, ?, ?);'
+    cur.execute(sql, (mid, role, model, message, get_jst_now()))
     conn.commit()
     return None
