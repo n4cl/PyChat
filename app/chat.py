@@ -2,14 +2,12 @@ import openai
 from fastapi import status
 
 
-def chat_request(message: str, model: str):
+def chat_request(messages: list, model: str):
     try:
       response = openai.ChatCompletion.create(
         model=model,
         temperature=0,
-        messages=[
-          {"role": "user", "content": message}
-        ]
+        messages=messages
       )
     except openai.error.InvalidRequestError as e:
         return str(e), status.HTTP_400_BAD_REQUEST

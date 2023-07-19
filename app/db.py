@@ -37,3 +37,11 @@ def insert_message_details(mid: int, role: str, model: str, message: str) -> Non
     cur.execute(sql, (mid, role, model, message, get_jst_now()))
     conn.commit()
     return None
+
+def select_message_details(mid: int) -> list[dict[str, str]]:
+    """Select message_details"""
+    conn = connect_db()
+    cur = conn.cursor()
+    sql = 'SELECT role, message FROM message_details WHERE mid = ? ORDER BY id;'
+    cur.execute(sql, (mid, ))
+    return [{"role": row[0], "content": row[1]} for row in cur.fetchall()]
