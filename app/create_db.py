@@ -27,6 +27,7 @@ def create_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 mid INTEGER NOT NULL,
                 role TEXT NOT NULL,
+                model TEXT,
                 message TEXT NOT NULL,
                 create_date TEXT NOT NULL,
                 foreign key (mid) references messages(id)
