@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel
 from fastapi import FastAPI, status, Response
 from chat import chat_request
-from db import insert_message, insert_message_details, MessageRole
+from db import insert_message, insert_message_details, select_message_details, MessageRole
 from custom_exception import RequiredParameterError
 from log import ContextIncludedRoute
 
@@ -49,7 +49,8 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
         mid = insert_message()
 
     insert_message_details(mid, MessageRole.USER, None, query)
-    msg, http_status = chat_request(query, model)
+    messages = select_message_details(mid)
+    msg, http_status = chat_request(messages, model)
 
     response.status_code = http_status
     if http_status != status.HTTP_200_OK:
