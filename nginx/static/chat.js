@@ -38,16 +38,37 @@ req_button.addEventListener("click", function() {
       const answer_div = document.createElement('div');
       answer_div.className = "answer";
       const response = JSON.parse(xhr.responseText)
-      response.message.split("\n").forEach(function (line) {
-        const p = document.createElement('p');
-        p.className = "answer_child";
-        if (line === "") {
-          answer_div.appendChild(document.createElement('br'));
+      let is_code = false;
+      let pre_elm = null;
+      for (const line of response.message.split("\n")) {
+        if (line.startsWith("```") && line.charAt(3) !== "'") {
+          // 文字列の先頭に ``` が存在し、その直後が ' 以外の場合の処理
+          if (is_code === false) {
+            // コードブロックの開始
+            is_code = true;
+            const new_pre = document.createElement('pre');
+            pre_elm = new_pre;
+            new_pre.textContent = line + "\n";
+            answer_div.appendChild(new_pre);
+          } else {
+            is_code = false;
+            pre_elm.textContent += line + "\n";
+          }
+        } else if (is_code === true) {
+          // コードブロックの中の処理
+          pre_elm.textContent += line + "\n";
         } else {
-          p.textContent = line;
+          // デフォルトの処理
+          const p = document.createElement('p');
+          p.className = "answer_child";
+          if (line === "") {
+            answer_div.appendChild(document.createElement('br'));
+          } else {
+            p.textContent = line;
+          }
+          answer_div.appendChild(p);
         }
-        answer_div.appendChild(p);
-      });
+      };
 
       if (typeof response.mid !== "undefined") {
         mid_elm.value = response.mid;
