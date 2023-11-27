@@ -16,7 +16,7 @@ class TestBody(BaseModel):
     message: str = None
 
 class ChatRequestBody(BaseModel):
-    mid: int = None
+    message_id: int = None
     query: str
     model: str
 
@@ -28,15 +28,9 @@ app.router.route_class = ContextIncludedRoute
 def hello() -> dict[str, str]:
     return {"message": "Hello World"}
 
-
-@app.post("/test")
-def post_test(test_body: TestBody) -> dict[str, str]:
-    return {"message": "Hello World"}
-
-
 @app.post("/chat")
 def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, str]:
-    mid = chat_request_body.mid
+    mid = chat_request_body.message_id
     query = chat_request_body.query
     model = chat_request_body.model
     if not query:
@@ -58,4 +52,4 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
 
     insert_message_details(mid, MessageRole.ASSISTANT, model, msg)
 
-    return {"message": msg, "mid": mid}
+    return {"message": msg, "message_id": mid}
