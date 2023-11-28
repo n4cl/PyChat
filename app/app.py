@@ -1,8 +1,8 @@
 import os
 from pydantic import BaseModel
 from fastapi import FastAPI, status, Response
-from chat import chat_request
-from db import insert_message, insert_message_details, select_message_details, MessageRole
+from chat import chat_request, generate_title
+from db import insert_message, insert_message_details, select_message_details, get_message, MessageRole
 from custom_exception import RequiredParameterError
 from log import ContextIncludedRoute
 
@@ -28,6 +28,11 @@ app.router.route_class = ContextIncludedRoute
 def hello() -> dict[str, str]:
     return {"message": "Hello World"}
 
+@app.get("/history")
+def history() -> dict[str, list]:
+    res = get_message()
+    return {"history": res}
+
 @app.post("/chat")
 def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, str]:
     mid = chat_request_body.message_id
@@ -40,7 +45,8 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"message": "model is required"}
     if not mid:
-        mid = insert_message()
+        title = generate_title(query)
+        mid = insert_message(title)
 
     insert_message_details(mid, MessageRole.USER, None, query)
     messages = select_message_details(mid)
@@ -52,4 +58,4 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
 
     insert_message_details(mid, MessageRole.ASSISTANT, model, msg)
 
-    return {"message": msg, "message_id": mid}
+    return {"message": msg, "message_id": mid, "title": title}

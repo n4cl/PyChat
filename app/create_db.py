@@ -14,6 +14,7 @@ def create_db():
         cur.execute("""
             CREATE TABLE messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
                 create_date TEXT NOT NULL,
                 is_deleted INTEGER NOT NULL DEFAULT 0
             );

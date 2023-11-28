@@ -8,13 +8,17 @@
     }
   };
 
-  function addHistory(message) {
+  function addHistory(message, is_first = false) {
     // リストに追加
     let history_list = document.getElementById("history_list");
     let new_li = document.createElement("li");
     new_li.className = "bg-gray-200 p-2 mr-1 rounded truncate hover:bg-gray-400";
     new_li.textContent = message;
-    history_list.prepend(new_li);
+    if (is_first) {
+      history_list.prepend(new_li);
+    } else {
+      history_list.appendChild(new_li);
+    }
   };
 
   // ボタンの有効か無効かを切り替える
@@ -27,12 +31,23 @@
     }
   };
 
-  // 初期化
-  (function initialize() {
-    let history_list = document.getElementById("history_list");
-    removeHistory(history_list.children.length);
-  })();
+  function getHistory() {
+    const uri = new URL(window.location.href);
+    let original_url = uri.origin;
+    let url = original_url + "/app/history"
+    request(url, "GET", null, function (xhr) {
+      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText)
+        for (let i = 0; i < response.history.length; i++) {
+          addHistory(response.history[i].title);
+        }
+      } else {
+        console.log("error");
+      }
+    });
+  }
 
+  // リクエストを送信する
   function request(url, method, data, readyStateChangeCallback) {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url);
@@ -42,6 +57,14 @@
     };
     xhr.send(data);
   };
+
+  // 初期化
+  (function initialize() {
+    let history_list = document.getElementById("history_list");
+    removeHistory(history_list.children.length);
+    getHistory();
+  })();
+
 
   // ボタンのイベントリスナーを登録
   let send_button = document.getElementById("send_button");
@@ -89,7 +112,7 @@
         // 新規チャットの場合
         if (message_id === null) {
           message_id_elm.value = response.message_id;
-          addHistory(query);
+          addHistory(query, true);
         }
         generateResponseSection(response.message);
 
