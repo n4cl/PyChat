@@ -21,9 +21,9 @@
             <div class="overflow-auto">
                 <ul id="history_list" class="space-y-2">
                     <!-- 履歴リストアイテムの例 -->
-                    <li class="bg-gray-200 p-2 mr-1 rounded truncate">履歴アイテム 1: AAAAAAAAAAA</li>
-                    <li class="bg-gray-200 p-2 mr-1 rounded truncate">履歴アイテム 2: BBBBBBBBBBB</li>
-                    <li class="bg-gray-200 p-2 mr-1 rounded truncate">履歴アイテム 3: CCCCCCCCCCC</li>
+                    <li class="bg-gray-200 p-2 mr-1 rounded truncate" data-message_id="1">履歴アイテム 1: AAAAAAAAAAA</li>
+                    <li class="bg-gray-200 p-2 mr-1 rounded truncate" data-message_id="2">履歴アイテム 2: BBBBBBBBBBB</li>
+                    <li class="bg-gray-200 p-2 mr-1 rounded truncate" data-message_id="3">履歴アイテム 3: CCCCCCCCCCC</li>
                 </ul>
             </div>
         </div>

@@ -8,12 +8,13 @@
     }
   };
 
-  function addHistory(message, is_first = false) {
+  function addHistory(message_id, message, is_first = false) {
     // リストに追加
     let history_list = document.getElementById("history_list");
     let new_li = document.createElement("li");
     new_li.className = "bg-gray-200 p-2 mr-1 rounded truncate hover:bg-gray-400";
     new_li.textContent = message;
+    new_li.dataset.message_id = message_id;
     if (is_first) {
       history_list.prepend(new_li);
     } else {
@@ -39,7 +40,7 @@
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
         const response = JSON.parse(xhr.responseText)
         for (let i = 0; i < response.history.length; i++) {
-          addHistory(response.history[i].title);
+          addHistory(response.history[i].message_id, response.history[i].title);
         }
       } else {
         console.log("error");
