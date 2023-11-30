@@ -51,8 +51,7 @@
             </div>
 
             <!-- 入力内容表示セクション -->
-            <div id="response_area" class="p-2 border w-11/12 border-gray-300 rounded overflow-auto">
-                <div><input id="message_id" type="hidden" /></div>
+            <div id="response_area" class="p-2 border w-11/12 border-gray-300 rounded overflow-auto" data-message_id="">
             </div>
         </div>
     </div>

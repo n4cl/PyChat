@@ -15,6 +15,9 @@
     new_li.className = "bg-gray-200 p-2 mr-1 rounded truncate hover:bg-gray-400";
     new_li.textContent = message;
     new_li.dataset.message_id = message_id;
+    new_li.addEventListener("click", function () {
+      console.log(this.dataset.message_id);
+    });
     if (is_first) {
       history_list.prepend(new_li);
     } else {
@@ -83,21 +86,20 @@
       response_div.className = "pb-2 text-white"
       response_area.appendChild(response_div);
     }
+
     // 問い合わせ結果の作成準備
     const query = query_area.value;
     generateResponseSection(query);
     query_area.value = "";
-
 
     // リクエストbodyの作成
     let model_select = document.getElementById("model_select");
     const model = model_select.options[model_select.selectedIndex].value;
 
     // 新規問い合わせの場合はmessage_idをnullにする
-    let message_id_elm = document.getElementById("message_id");
     let message_id = null;
-    if (message_id_elm.value !== "") {
-      message_id = message_id_elm.value;
+    if (response_area.dataset.message_id !== "") {
+      message_id = response_area.dataset.message_id;
     }
 
     const uri = new URL(window.location.href);
@@ -112,7 +114,7 @@
 
         // 新規チャットの場合
         if (message_id === null) {
-          message_id_elm.value = response.message_id;
+          response_area.dataset.message_id = response.message_id;
           addHistory(query, true);
         }
         generateResponseSection(response.message);
