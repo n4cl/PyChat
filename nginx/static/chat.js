@@ -1,11 +1,68 @@
 'use strict';
 (function () {
+
+  // リクエストを送信する
+  function request(url, method, data, readyStateChangeCallback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function() {
+      readyStateChangeCallback(xhr);
+    };
+    xhr.send(data);
+  };
+
+  function getOriginlUrl() {
+    const uri = new URL(window.location.href);
+    return uri.origin;
+  };
+
+  function getEndpoint(path) {
+    return getOriginlUrl() + path;
+  }
+
   function removeHistory(count) {
     // リストの子要素を全て削除
     let history_list = document.getElementById("history_list");
     for (let i = 0; i < count; i++) {
       history_list.removeChild(history_list.children[0]);
     }
+  };
+
+  // レスポンスエリアをリフレッシュする
+  function refleshResponseArea() {
+    const main_content = document.getElementById("response_area");
+    while (main_content.firstChild) {
+      main_content.removeChild(main_content.firstChild);
+    }
+  };
+
+  // レスポンスエリアにメッセージを追加する
+  function generateResponseSection(message) {
+    let response_area = document.getElementById("response_area");
+    let response_div = document.createElement('div');
+    response_div.innerText = message;
+    response_div.className = "pb-2 text-white"
+    response_area.appendChild(response_div);
+  };
+
+  function fetchPastMessage(message_id) {
+    // 履歴から選択したメッセージを取得する
+    const path = "/app/chat/" + message_id;
+    const url = getEndpoint(path);
+    request(url, "GET", null, function (xhr) {
+      // 過去のメッセージをレスポンスエリアに展開する
+      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText)
+
+        for (let i = 0; i < response.messages.length; i++) {
+          generateResponseSection(response.messages[i].content);
+        }
+
+      } else {
+        console.log("error");
+      }
+    });
   };
 
   function addHistory(message_id, message, is_first = false) {
@@ -16,6 +73,9 @@
     new_li.textContent = message;
     new_li.dataset.message_id = message_id;
     new_li.addEventListener("click", function () {
+      refleshResponseArea()
+      fetchPastMessage(this.dataset.message_id);
+
       console.log(this.dataset.message_id);
     });
     if (is_first) {
@@ -36,9 +96,7 @@
   };
 
   function getHistory() {
-    const uri = new URL(window.location.href);
-    let original_url = uri.origin;
-    let url = original_url + "/app/history"
+    const url = getEndpoint("/app/history")
     request(url, "GET", null, function (xhr) {
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
         const response = JSON.parse(xhr.responseText)
@@ -50,17 +108,6 @@
       }
     });
   }
-
-  // リクエストを送信する
-  function request(url, method, data, readyStateChangeCallback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onreadystatechange = function() {
-      readyStateChangeCallback(xhr);
-    };
-    xhr.send(data);
-  };
 
   // 初期化
   (function initialize() {
@@ -79,14 +126,6 @@
     };
     toggleButton(this.id)
 
-    const generateResponseSection = function (message) {
-      let response_area = document.getElementById("response_area");
-      let response_div = document.createElement('div');
-      response_div.innerText = message;
-      response_div.className = "pb-2 text-white"
-      response_area.appendChild(response_div);
-    }
-
     // 問い合わせ結果の作成準備
     const query = query_area.value;
     generateResponseSection(query);
@@ -102,9 +141,7 @@
       message_id = response_area.dataset.message_id;
     }
 
-    const uri = new URL(window.location.href);
-    let original_url = uri.origin;
-    let url = original_url + "/app/chat"
+    const url = getEndpoint("/app/chat");
     let data = JSON.stringify({query: query, model: model, message_id: message_id});
 
 
