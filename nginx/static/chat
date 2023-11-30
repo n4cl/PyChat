@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <!-- Tailwind CSSのリンク -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="chat.js" defer></script>
+</head>
+<body class="bg-gray-500">
+    <div class="grid grid-cols-[240px_1fr] grid-rows-[100vh]">
+        <!-- 左サイドバーセクション -->
+        <div class="flex flex-col p-4">
+            <!-- 固定ボタンセクション -->
+            <div class="mb-4">
+                <button class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">New Chat</button>
+            </div>
+            <!-- 履歴リストセクション -->
+            <div class="overflow-auto">
+                <ul id="history_list" class="space-y-2">
+                    <!-- 履歴リストアイテムの例 -->
+                    <li class="bg-gray-200 p-2 mr-1 rounded truncate" data-message_id="1">履歴アイテム 1: AAAAAAAAAAA</li>
+                    <li class="bg-gray-200 p-2 mr-1 rounded truncate" data-message_id="2">履歴アイテム 2: BBBBBBBBBBB</li>
+                    <li class="bg-gray-200 p-2 mr-1 rounded truncate" data-message_id="3">履歴アイテム 3: CCCCCCCCCCC</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- メインコンテンツセクション -->
+        <div class="grid grid-rows-[1fr_3fr] p-4">
+            <!-- 入力フィールドセクション -->
+            <div class="mb-4">
+                <div class="w-48 mb-2">
+                    <select id="model_select" class="w-full p-2 border border-gray-300 rounded">
+                        <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
+                        <option value="gpt-4">gpt-4</option>
+                        <option value="gpt-4-1106-preview">gpt-4-1106-preview</option>
+                        <option value="gpt-4-vision-preview">gpt-4-vision-preview</option>
+                        <option value="dall-e-3">dall-e-3</option>
+                        <!-- その他のオプション... -->
+                    </select>
+                </div>
+                <div class="w-4/5 mb-2">
+                    <textarea id="query_area" class="w-full h-24 p-2 border border-gray-300 rounded resize-none" placeholder="Message..."></textarea>
+                </div>
+                <div class="w-24">
+                    <button id="send_button" class="bg-blue-500 text-white px-5 py-2 rounded hover:bg-blue-600">送信</button>
+                </div>
+            </div>
+
+            <!-- 入力内容表示セクション -->
+            <div id="response_area" class="p-2 border w-11/12 border-gray-300 rounded overflow-auto" data-message_id="">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

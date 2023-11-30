@@ -5,8 +5,9 @@ server {
     error_log /dev/stdout;
 
     location / {
+        default_type text/html;
         root   /usr/share/nginx/html;
-        index chat.html;
+        index chat;
     }
 
     location /app/ {
