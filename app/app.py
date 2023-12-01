@@ -33,6 +33,11 @@ def history() -> dict[str, list]:
     res = get_message()
     return {"history": res}
 
+@app.get("/chat/{message_id}")
+def get_chat(message_id: int) -> dict[str, list]:
+    messages = select_message_details(message_id)
+    return {"messages": messages}
+
 @app.post("/chat")
 def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, str]:
     mid = chat_request_body.message_id
