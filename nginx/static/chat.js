@@ -37,6 +37,18 @@
     }
   };
 
+  function refreshAttatchFile() {
+    // モデルの data-attach_file の値で attach_file の表示を切り替える
+    const model_select = document.getElementById("model_select");
+    const is_attach_file = model_select.options[model_select.selectedIndex].dataset.attach_file
+    const attach_file = document.getElementById("attach_file");
+    if (is_attach_file === "0") {
+      attach_file.classList.add("hidden");
+    } else {
+      attach_file.classList.remove("hidden");
+    }
+  };
+
   // レスポンスエリアにメッセージを追加する
   function generateResponseSection(message) {
     let response_area = document.getElementById("response_area");
@@ -103,8 +115,6 @@
         for (let i = 0; i < response.history.length; i++) {
           addHistory(response.history[i].message_id, response.history[i].title);
         }
-      } else {
-        console.log("error");
       }
     });
   }
@@ -114,8 +124,14 @@
     let history_list = document.getElementById("history_list");
     removeHistory(history_list.children.length);
     getHistory();
+    refreshAttatchFile();
   })();
 
+  // モデル選択のイベントリスナーを登録
+  const model_select = document.getElementById("model_select");
+  model_select.addEventListener("change", function () {
+    refreshAttatchFile();
+  });
 
   // ボタンのイベントリスナーを登録
   let send_button = document.getElementById("send_button");
