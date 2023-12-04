@@ -10,12 +10,12 @@
       readyStateChangeCallback(xhr);
     };
     xhr.send(data);
-  };
+  }
 
   function getOriginlUrl() {
     const uri = new URL(window.location.href);
     return uri.origin;
-  };
+  }
 
   function getEndpoint(path) {
     return getOriginlUrl() + path;
@@ -27,7 +27,7 @@
     for (let i = 0; i < count; i++) {
       history_list.removeChild(history_list.children[0]);
     }
-  };
+  }
 
   // レスポンスエリアをリフレッシュする
   function refleshResponseArea() {
@@ -35,16 +35,29 @@
     while (main_content.firstChild) {
       main_content.removeChild(main_content.firstChild);
     }
-  };
+  }
+
+  function refreshAttatchFile() {
+    // モデルの data-attach_file の値で attach_file の表示を切り替える
+    const model_select = document.getElementById("model_select");
+    const is_attach_file = model_select.options[model_select.selectedIndex].dataset.attach_file
+    const attach_file = document.getElementById("attach_file");
+    if (is_attach_file === "0") {
+      attach_file.classList.add("hidden");
+    } else {
+      attach_file.classList.remove("hidden");
+    }
+  }
 
   // レスポンスエリアにメッセージを追加する
-  function generateResponseSection(message) {
+  function generateResponseSection(message_id, message) {
     let response_area = document.getElementById("response_area");
+    response_area.dataset.message_id = message_id;
     let response_div = document.createElement('div');
     response_div.innerText = message;
     response_div.className = "pb-2 text-white"
     response_area.appendChild(response_div);
-  };
+  }
 
   function fetchPastMessage(message_id) {
     // 履歴から選択したメッセージを取得する
@@ -56,14 +69,12 @@
         const response = JSON.parse(xhr.responseText)
 
         for (let i = 0; i < response.messages.length; i++) {
-          generateResponseSection(response.messages[i].content);
+          generateResponseSection(message_id, response.messages[i].content);
         }
 
-      } else {
-        console.log("error");
       }
     });
-  };
+  }
 
   function addHistory(message_id, message, is_first = false) {
     // リストに追加
@@ -75,15 +86,13 @@
     new_li.addEventListener("click", function () {
       refleshResponseArea()
       fetchPastMessage(this.dataset.message_id);
-
-      console.log(this.dataset.message_id);
     });
     if (is_first) {
       history_list.prepend(new_li);
     } else {
       history_list.appendChild(new_li);
     }
-  };
+  }
 
   // ボタンの有効か無効かを切り替える
   function toggleButton(id) {
@@ -93,7 +102,7 @@
     } else {
       button.disabled = true;
     }
-  };
+  }
 
   function getHistory() {
     const url = getEndpoint("/app/history")
@@ -103,8 +112,6 @@
         for (let i = 0; i < response.history.length; i++) {
           addHistory(response.history[i].message_id, response.history[i].title);
         }
-      } else {
-        console.log("error");
       }
     });
   }
@@ -114,16 +121,39 @@
     let history_list = document.getElementById("history_list");
     removeHistory(history_list.children.length);
     getHistory();
+    refreshAttatchFile();
   })();
 
+  // モデル選択のイベントリスナーを登録
+  const model_select = document.getElementById("model_select");
+  model_select.addEventListener("change", function () {
+    refreshAttatchFile();
+  });
 
   // ボタンのイベントリスナーを登録
   let send_button = document.getElementById("send_button");
   send_button.addEventListener("click", function () {
+    const response_area = document.getElementById("response_area");
+    const _request = function(data) {
+      request(url, "POST", data, function (xhr) {
+        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText)
+
+          // 新規チャットの場合
+          if (message_id === null) {
+            response_area.dataset.message_id = response.message_id;
+            addHistory(query, true);
+          }
+          generateResponseSection(response.message);
+        }
+        toggleButton(send_button.id);
+      });
+    };
+
     let query_area = document.getElementById("query_area");
     if (query_area.value === "") {
       return;
-    };
+    }
     toggleButton(this.id)
 
     // 問い合わせ結果の作成準備
@@ -142,28 +172,19 @@
     }
 
     const url = getEndpoint("/app/chat");
-    let data = JSON.stringify({query: query, model: model, message_id: message_id});
-
-
-    request(url, "POST", data, function (xhr) {
-      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText)
-
-        // 新規チャットの場合
-        if (message_id === null) {
-          response_area.dataset.message_id = response.message_id;
-          addHistory(query, true);
-        }
-        generateResponseSection(response.message);
-
-      } else {
-        console.log("error");
-      }
-      toggleButton(send_button.id);
-    });
+    let body = {query: query, model: model, message_id: message_id};
+    const attach_file = document.getElementById("attach_file");
+    if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = function() {
+        body["file"] = reader.result;
+        _request(JSON.stringify(body));
+      };
+      reader.readAsDataURL(attach_file.files[0]);
+    } else {
+      _request(JSON.stringify(body));
+    }
 
   });
-
-
 
 })();

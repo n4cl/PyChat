@@ -1,10 +1,20 @@
+import os
 import sqlite3
 
 def cereate_select_table_sql(table_name: str) -> str:
     return f"SELECT count(name) FROM sqlite_master WHERE name = \"{table_name}\";"
 
+
+def remove_db(db_path):
+
+    if os.path.exists(db_path):
+        os.remove(db_path)
+        print("remove db")
+
 def create_db():
     filepath = "chat.sqlite"
+
+    remove_db(filepath)
     conn = sqlite3.connect(filepath)
     cur = conn.cursor()
 
@@ -29,9 +39,22 @@ def create_db():
                 mid INTEGER NOT NULL,
                 role TEXT NOT NULL,
                 model TEXT,
-                message TEXT NOT NULL,
                 create_date TEXT NOT NULL,
                 foreign key (mid) references messages(id)
+            );
+        """)
+
+    res = cur.execute(cereate_select_table_sql("contents"))
+
+    if res.fetchone()[0] == 0:
+        cur.execute("""
+            CREATE TABLE contents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mdid INTEGER NOT NULL,
+                data_type TEXT NOT NULL,
+                message TEXT,
+                file_path TEXT,
+                foreign key (mdid) references message_details(id)
             );
         """)
 
@@ -55,40 +78,6 @@ def create_db():
                     unique(setting_name)
                 );
             """)
-
-    res = cur.execute(cereate_select_table_sql("images"))
-    if res.fetchone()[0] == 0:
-        cur.execute("""
-            CREATE TABLE images (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                create_date TEXT NOT NULL
-            );
-        """)
-    res = cur.execute(cereate_select_table_sql("image_details"))
-    if res.fetchone()[0] == 0:
-        cur.execute("""
-            CREATE TABLE image_details (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                images_id INTEGER NOT NULL,
-                model TEXT,
-                prompt TEXT NOT NULL,
-                size TEXT NOT NULL,
-                quality TEXT NOT NULL,
-                create_date TEXT NOT NULL,
-                foreign key (images_id) references images(id)
-            );
-        """)
-    res = cur.execute(cereate_select_table_sql("image_entities"))
-    if res.fetchone()[0] == 0:
-        cur.execute("""
-            CREATE TABLE image_entities (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                image_details_id INTEGER NOT NULL,
-                url TEXT NOT NULL,
-                file TEXT NOT NULL,
-                foreign key (image_details_id) references images(id)
-            );
-        """)
 
     conn.commit()
 

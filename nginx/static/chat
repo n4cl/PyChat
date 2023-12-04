@@ -32,15 +32,20 @@
         <div class="grid grid-rows-[1fr_3fr] p-4">
             <!-- 入力フィールドセクション -->
             <div class="mb-4">
-                <div class="w-48 mb-2">
-                    <select id="model_select" class="w-full p-2 border border-gray-300 rounded">
-                        <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
-                        <option value="gpt-4">gpt-4</option>
-                        <option value="gpt-4-1106-preview">gpt-4-1106-preview</option>
-                        <option value="gpt-4-vision-preview">gpt-4-vision-preview</option>
-                        <option value="dall-e-3">dall-e-3</option>
-                        <!-- その他のオプション... -->
-                    </select>
+                <div class="min-w-2/6 mb-2 flex flex-row">
+                    <div class="mr-2">
+                        <select id="model_select" class="w-full p-2 border border-gray-300 rounded">
+                            <option value="gpt-3.5-turbo-0301" data-attach_file="0">gpt-3.5-turbo-0301</option>
+                            <option value="gpt-4" data-attach_file="0">gpt-4</option>
+                            <option value="gpt-4-1106-preview" data-attach_file="0">gpt-4-1106-preview</option>
+                            <option value="gpt-4-vision-preview" data-attach_file="1">gpt-4-vision-preview</option>
+                            <option value="dall-e-3" data-attach_file="1">dall-e-3</option>
+                            <!-- その他のオプション... -->
+                        </select>
+                    </div>
+                    <div class="pt-1">
+                        <input type="file" id="attach_file" class="w-full hidden">
+                    </div>
                 </div>
                 <div class="w-4/5 mb-2">
                     <textarea id="query_area" class="w-full h-24 p-2 border border-gray-300 rounded resize-none" placeholder="Message..."></textarea>
