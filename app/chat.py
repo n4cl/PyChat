@@ -5,13 +5,13 @@ from fastapi import status
 
 def generate_title(message: str):
 
-    prompt = ("質問の内容を要約してタイトルを生成してください。\n"
+    prompt = ("入力された内容を要約してタイトルを生成してください。\n"
               "また生成場合は出力フォーマットにしたがってください。\n\n"
               "## 出力フォーマット\n"
               "文字列\n\n"
               "## 出力例\n"
               "これはタイトル！\n\n"
-              "## 質問内容"
+              "## 入力された内容\n"
               "{message}\n\n"
               "## タイトル\n")
     content = prompt.format(message=message)
