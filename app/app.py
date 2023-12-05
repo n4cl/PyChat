@@ -72,4 +72,4 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
     contentes = {DataType.TEXT: msg}
     insert_message_details(mid, MessageRole.ASSISTANT, model, contentes)
 
-    return {"message": msg, "message_id": mid, "title": title}
+    return {"message": msg, "message_id": mid}

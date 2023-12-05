@@ -140,11 +140,10 @@
           const response = JSON.parse(xhr.responseText)
 
           // 新規チャットの場合
-          if (message_id === null) {
-            response_area.dataset.message_id = response.message_id;
-            addHistory(query, true);
+          if (response_area.dataset.message_id === "") {
+            addHistory(response.message_id, query, true);
           }
-          generateResponseSection(response.message);
+          generateResponseSection(response.message_id, response.message);
         }
         toggleButton(send_button.id);
       });
@@ -158,18 +157,18 @@
 
     // 問い合わせ結果の作成準備
     const query = query_area.value;
-    generateResponseSection(query);
+    let message_id = null;
+    if (response_area.dataset.message_id === "") {
+      generateResponseSection("", query);
+    } else {
+      message_id = response_area.dataset.message_id;
+      generateResponseSection(message_id, query);
+    }
     query_area.value = "";
 
     // リクエストbodyの作成
     let model_select = document.getElementById("model_select");
     const model = model_select.options[model_select.selectedIndex].value;
-
-    // 新規問い合わせの場合はmessage_idをnullにする
-    let message_id = null;
-    if (response_area.dataset.message_id !== "") {
-      message_id = response_area.dataset.message_id;
-    }
 
     const url = getEndpoint("/app/chat");
     let body = {query: query, model: model, message_id: message_id};
