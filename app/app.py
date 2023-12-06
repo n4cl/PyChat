@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel
 from fastapi import FastAPI, status, Response
 from chat import chat_request, generate_title
-from db import insert_message, insert_message_details, select_message_details, get_message, MessageRole
+from db import insert_message, insert_message_details, select_message_details, get_message, MessageRole, DataType
 from custom_exception import RequiredParameterError
 from log import ContextIncludedRoute
 
@@ -16,9 +16,10 @@ class TestBody(BaseModel):
     message: str = None
 
 class ChatRequestBody(BaseModel):
-    message_id: int = None
+    message_id: int = None # Memo: message_id is not required
     query: str
     model: str
+    file: str = None
 
 app = FastAPI()
 app.router.route_class = ContextIncludedRoute
@@ -43,17 +44,24 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
     mid = chat_request_body.message_id
     query = chat_request_body.query
     model = chat_request_body.model
+    file = chat_request_body.file
+    contents = {DataType.TEXT: query}
     if not query:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"message": "query is required"}
     if not model:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"message": "model is required"}
+    if file:
+        # TODO: file upload
+        # contents[DataType.FILE] = file_path
+        pass
+
     if not mid:
         title = generate_title(query)
         mid = insert_message(title)
 
-    insert_message_details(mid, MessageRole.USER, None, query)
+    insert_message_details(mid, MessageRole.USER, None, contents)
     messages = select_message_details(mid)
     msg, http_status = chat_request(messages, model)
 
@@ -61,6 +69,7 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
     if http_status != status.HTTP_200_OK:
         return {"message": msg}
 
-    insert_message_details(mid, MessageRole.ASSISTANT, model, msg)
+    contentes = {DataType.TEXT: msg}
+    insert_message_details(mid, MessageRole.ASSISTANT, model, contentes)
 
-    return {"message": msg, "message_id": mid, "title": title}
+    return {"message": msg, "message_id": mid}
