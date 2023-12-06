@@ -53,10 +53,62 @@
   function generateResponseSection(message_id, message) {
     let response_area = document.getElementById("response_area");
     response_area.dataset.message_id = message_id;
-    let response_div = document.createElement('div');
-    response_div.innerText = message;
-    response_div.className = "pb-2 text-white"
-    response_area.appendChild(response_div);
+    const message_list = message.split("\n");
+
+    const div_elm = document.createElement('div');
+    response_area.appendChild(div_elm);
+
+    let p_elm = null;
+    let pre_elm = null;
+    let code_elm = null;
+    let is_code_block = false;
+
+    for (let i = 0; i < message_list.length; i++) {
+      let row = message_list[i];
+
+      if (is_code_block === false && row === "```") {
+
+        // p タグがあれば追加する
+        if (p_elm !== null) {
+          p_elm.className = "pb-2 text-white"
+          div_elm.appendChild(p_elm);
+          p_elm = null;
+        }
+
+        is_code_block = true;
+        pre_elm = document.createElement('pre');
+        pre_elm.className = "bg-gray-800 rounded p-2";
+        code_elm = document.createElement('code');
+        code_elm.className = "text-green-200";
+        pre_elm.appendChild(code_elm);
+        continue;
+      }
+
+      // コードブロックの中
+      if (is_code_block === true) {
+        // コードブロックの終了判定
+        if (row === "```") {
+          is_code_block = false;
+          div_elm.appendChild(pre_elm);
+          continue;
+        }
+        code_elm.textContent += row + "\n";
+        continue;
+      }
+
+      // 一般的なテキスト
+      if (p_elm === null) {
+        p_elm = document.createElement('p');
+        p_elm.textContent = row;
+        continue;
+      } else {
+        p_elm.textContent += "\n" + row;
+      }
+    }
+    if (p_elm !== null) {
+      p_elm.className = "pb-2 text-white"
+      div_elm.appendChild(p_elm);
+    }
   }
 
   function fetchPastMessage(message_id) {
@@ -141,6 +193,7 @@
 
           // 新規チャットの場合
           if (response_area.dataset.message_id === "") {
+            // TODO: 新規チャットのタイトルを取得する
             addHistory(response.message_id, query, true);
           }
           generateResponseSection(response.message_id, response.message);
