@@ -16,6 +16,7 @@ class MessageKey:
     TYPE = "type"
     TEXT = "text"
     IMAGE_URL = "image_url"
+    MODEL = "model"
 
 class MessageType:
     TEXT = "text"
@@ -78,7 +79,7 @@ def get_message():
     cur.execute(sql)
     return [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
-def select_message_details(mid: int, is_multiple_input: bool=False) -> list[dict[str, str]]:
+def select_message_details(mid: int, is_multiple_input: bool=False, required_column={"role", "message"}) -> list[dict[str, str]]:
     """Select message_details"""
     conn = connect_db()
     cur = conn.cursor()
@@ -87,7 +88,8 @@ def select_message_details(mid: int, is_multiple_input: bool=False) -> list[dict
                   'md.role, '
                   'c.data_type, '
                   'c.message, '
-                  'c.file_path '
+                  'c.file_path, '
+                  'md.model '
            'FROM message_details as md '
            'INNER JOIN contents as c '
            'ON md.id = c.mdid '
@@ -97,7 +99,19 @@ def select_message_details(mid: int, is_multiple_input: bool=False) -> list[dict
     rows = cur.fetchall()
 
     if not is_multiple_input:
-        return [{MessageKey.ROLE: row[2], MessageKey.CONTENT: row[4]} for row in rows]
+        results = []
+        # 生のSQLだと綺麗に取得できないのでここで整形する
+        for row in rows:
+            result = {}
+            if "role" in required_column:
+                result[MessageKey.ROLE] = row[2]
+            if "message" in required_column:
+                result[MessageKey.CONTENT] = row[4]
+            if "model" in required_column:
+                result[MessageKey.MODEL] = row[6]
+            results.append(result)
+        return results
+
 
     temp_mdid = rows[0][0]
     messages = []

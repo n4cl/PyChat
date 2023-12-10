@@ -7,7 +7,7 @@
     <title>Chat</title>
     <!-- Tailwind CSSのリンク -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="text/javascript" src="chat.js" defer></script>
+    <script type="module" src="chat.js" defer></script>
 </head>
 <body class="bg-gray-500">
     <div class="grid grid-cols-[240px_1fr] grid-rows-[100vh]">
@@ -39,7 +39,7 @@
                             <option value="gpt-4" data-attach_file="0">gpt-4</option>
                             <option value="gpt-4-1106-preview" data-attach_file="0">gpt-4-1106-preview</option>
                             <option value="gpt-4-vision-preview" data-attach_file="1">gpt-4-vision-preview</option>
-                            <option value="dall-e-3" data-attach_file="1">dall-e-3</option>
+                            <option value="dall-e-3" data-attach_file="0">dall-e-3</option>
                             <!-- その他のオプション... -->
                         </select>
                     </div>

@@ -36,7 +36,7 @@ def history() -> dict[str, list]:
 
 @app.get("/chat/{message_id}")
 def get_chat(message_id: int) -> dict[str, list]:
-    messages = select_message_details(message_id)
+    messages = select_message_details(message_id, required_column={"role", "message", "model"})
     return {"messages": messages}
 
 @app.post("/chat")
@@ -62,7 +62,7 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
         mid = insert_message(title)
 
     insert_message_details(mid, MessageRole.USER, None, contents)
-    messages = select_message_details(mid)
+    messages = select_message_details(mid, required_column={"role", "message"})
     msg, http_status = chat_request(messages, model)
 
     response.status_code = http_status
