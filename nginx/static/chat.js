@@ -99,15 +99,8 @@ import { Utils } from "./utils.js";
       }
 
       // 一般的なテキスト
-      if (p_elm === null) {
-        p_elm = document.createElement('p');
-        p_elm.textContent = row;
-        continue;
-      } else {
-        p_elm.textContent += "\n" + row;
-      }
-    }
-    if (p_elm !== null) {
+      p_elm = document.createElement('p');
+      p_elm.textContent = row;
       p_elm.className = "pb-2 text-white"
       div_elm.appendChild(p_elm);
     }
