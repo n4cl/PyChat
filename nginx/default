@@ -6,7 +6,7 @@ server {
 
     location / {
         default_type text/html;
-        root   /usr/share/nginx/html;
+        root   /usr/share/nginx/html/app;
         index chat;
     }
 
