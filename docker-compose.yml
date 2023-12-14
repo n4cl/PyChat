@@ -8,6 +8,6 @@ services:
         ports:
             - 80:80
         volumes:
-            - ./app:/usr/local/app
-            - ./nginx/static:/usr/share/nginx/html
+            - ./:/usr/local/app
+            - ./nginx/default:/etc/nginx/sites-available/default
         container_name: chat
