@@ -61,6 +61,7 @@ import { Utils } from "./utils.js";
     div_elm.appendChild(role_elm);
 
     let p_elm = null;
+    let sourcecode_area_elm = null;
     let pre_elm = null;
     let code_elm = null;
     let is_code_block = false;
@@ -68,7 +69,9 @@ import { Utils } from "./utils.js";
     for (let i = 0; i < message_list.length; i++) {
       let row = message_list[i];
 
-      if (is_code_block === false && row === "```") {
+      if (is_code_block === false && row.startsWith("```")) {
+        sourcecode_area_elm = document.createElement('div');
+        sourcecode_area_elm.className = "rounded overflow-hidden";
 
         // p タグがあれば追加する
         if (p_elm !== null) {
@@ -77,9 +80,16 @@ import { Utils } from "./utils.js";
           p_elm = null;
         }
 
+        if (row.length > 3) {
+          const lang_elm = document.createElement('div');
+          lang_elm.className = "text-white bg-gray-700 p-2";
+          lang_elm.textContent = row.slice(3);
+          sourcecode_area_elm.appendChild(lang_elm);
+        }
+
         is_code_block = true;
         pre_elm = document.createElement('pre');
-        pre_elm.className = "bg-gray-800 rounded p-2";
+        pre_elm.className = "bg-gray-800 p-2";
         code_elm = document.createElement('code');
         code_elm.className = "text-green-200";
         pre_elm.appendChild(code_elm);
@@ -91,7 +101,8 @@ import { Utils } from "./utils.js";
         // コードブロックの終了判定
         if (row === "```") {
           is_code_block = false;
-          div_elm.appendChild(pre_elm);
+          sourcecode_area_elm.appendChild(pre_elm);
+          div_elm.appendChild(sourcecode_area_elm);
           continue;
         }
         code_elm.textContent += row + "\n";
