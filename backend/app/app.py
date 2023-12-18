@@ -4,7 +4,7 @@ from fastapi import FastAPI, status, Response
 from chat import chat_request, generate_title
 from db import insert_message, insert_message_details, select_message_details, get_message, MessageRole, DataType
 from custom_exception import RequiredParameterError
-from log import ContextIncludedRoute
+from fastapi_custom_route import ContextIncludedRoute
 
 
 OPENAI_API_KEY = "OPENAI_API_KEY"
@@ -65,9 +65,9 @@ def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, st
     messages = select_message_details(mid, required_column={"role", "message"})
     msg, http_status = chat_request(messages, model)
 
-    response.status_code = http_status
     if http_status != status.HTTP_200_OK:
-        return {"message": msg}
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {"message": "Failed to chat"}
 
     contentes = {DataType.TEXT: msg}
     insert_message_details(mid, MessageRole.ASSISTANT, model, contentes)
