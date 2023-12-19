@@ -1,7 +1,8 @@
 import openai
-from openai import OpenAI
 from fastapi import status
 from fastapi_custom_route import LOGGER
+from openai import OpenAI
+
 
 def generate_title(message: str):
 

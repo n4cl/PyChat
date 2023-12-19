@@ -1,5 +1,5 @@
 import sys
-from logging import getLogger, StreamHandler, DEBUG
+from logging import DEBUG, StreamHandler, getLogger
 
 
 def get_logger(name) -> getLogger:

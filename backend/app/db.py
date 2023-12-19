@@ -79,8 +79,14 @@ def get_message():
     cur.execute(sql)
     return [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
-def select_message_details(mid: int, is_multiple_input: bool=False, required_column={"role", "message"}) -> list[dict[str, str]]:
+def select_message_details(mid: int,
+                           is_multiple_input: bool=False,
+                           required_column=None) -> list[dict[str, str]]:
     """Select message_details"""
+
+    if required_column is None:
+        required_column = {'role', 'message'}
+
     conn = connect_db()
     cur = conn.cursor()
     sql = ('SELECT md.id as mdid, '
