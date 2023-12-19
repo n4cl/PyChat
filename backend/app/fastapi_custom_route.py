@@ -1,12 +1,11 @@
+import datetime
 import json
 import time
-import datetime
-from typing import Callable
+from collections.abc import Callable
 from uuid import uuid4
 
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-
 from log import get_logger
 
 LOGGER = get_logger(__name__)
