@@ -22,4 +22,7 @@ COPY ./ /usr/local/app
 # Frontend のリンク
 RUN ln -s /usr/local/app/frontend/app /usr/share/nginx/html
 
+ARG ENV
+RUN if [ "$ENV" = "development" ] ; then pip install -r /usr/local/app/backend/requirements-dev.txt ; fi
+
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
