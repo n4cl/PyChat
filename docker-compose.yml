@@ -12,3 +12,4 @@ services:
         volumes:
             - ./:/usr/local/app
             - ./nginx/default:/etc/nginx/sites-available/default
+            - /usr/local/app/frontend/node_modules
