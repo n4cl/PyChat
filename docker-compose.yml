@@ -13,3 +13,4 @@ services:
             - ./:/usr/local/app
             - ./nginx/default:/etc/nginx/sites-available/default
             - /usr/local/app/frontend/node_modules
+            - /usr/local/app/frontend/app/js

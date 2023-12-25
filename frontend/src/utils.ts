@@ -1,7 +1,7 @@
 export class Utils {
 
   // リクエストを送信する
-  static request(url, method, data, readyStateChangeCallback) {
+  static request(url: string, method: string, data: null | string, readyStateChangeCallback: (xhr: XMLHttpRequest) => void) {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url);
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -11,13 +11,13 @@ export class Utils {
     xhr.send(data);
   }
 
-  static getOriginlUrl() {
+  static getOriginalUrl() {
     const uri = new URL(window.location.href);
     return uri.origin;
   }
 
-  static getEndpoint(path) {
-    return this.getOriginlUrl() + path;
+  static getEndpoint(path: string) {
+    return this.getOriginalUrl() + path;
   }
 
 }
