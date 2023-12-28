@@ -4,7 +4,7 @@ import { Utils } from "./utils.js";
 
 (function () {
 
-  function getUser(role, model) {
+  function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
     if (role === "user") {
@@ -17,19 +17,23 @@ import { Utils } from "./utils.js";
     return user;
   }
 
-  function removeHistory(count) {
+  function removeHistory(count: number) {
     // リストの子要素を全て削除
-    let history_list = document.getElementById("history_list");
-    for (let i = 0; i < count; i++) {
-      history_list.removeChild(history_list.children[0]);
+    const history_list = document.getElementById("history_list");
+    if (history_list !== null) {
+      for (let i = 0; i < count; i++) {
+        history_list.removeChild(history_list.children[0]);
+      }
     }
   }
 
   // レスポンスエリアをリフレッシュする
   function refleshResponseArea() {
     const main_content = document.getElementById("response_area");
-    while (main_content.firstChild) {
-      main_content.removeChild(main_content.firstChild);
+    if (main_content !== null) {
+      while (main_content.firstChild) {
+        main_content.removeChild(main_content.firstChild);
+      }
     }
   }
 
@@ -46,8 +50,12 @@ import { Utils } from "./utils.js";
   }
 
   // レスポンスエリアにメッセージを追加する
-  function generateResponseSection(message_id, message, role="Unknown") {
-    let response_area = document.getElementById("response_area");
+  function generateResponseSection(message_id: string, message: string, role="Unknown") {
+    const response_area = document.getElementById("response_area");
+    if (response_area === null) {
+      console.error("response_area is null");
+      return;
+    }
     response_area.dataset.message_id = message_id;
     const message_list = message.split("\n");
 
@@ -67,7 +75,7 @@ import { Utils } from "./utils.js";
     let is_code_block = false;
 
     for (let i = 0; i < message_list.length; i++) {
-      let row = message_list[i];
+      const row = message_list[i];
 
       if (is_code_block === false && row.startsWith("```")) {
         sourcecode_area_elm = document.createElement('div');
@@ -117,7 +125,7 @@ import { Utils } from "./utils.js";
     }
   }
 
-  function fetchPastMessage(message_id) {
+  function fetchPastMessage(message_id: string) {
     // 履歴から選択したメッセージを取得する
     const path = "/app/chat/" + message_id;
     const url = Utils.getEndpoint(path);
@@ -127,7 +135,7 @@ import { Utils } from "./utils.js";
         const response = JSON.parse(xhr.responseText)
 
         for (let i = 0; i < response.messages.length; i++) {
-          let user = getUser(response.messages[i].role, response.messages[i].model);
+          const user = getUser(response.messages[i].role, response.messages[i].model);
           generateResponseSection(message_id, response.messages[i].content, user);
         }
 
@@ -135,10 +143,15 @@ import { Utils } from "./utils.js";
     });
   }
 
-  function addHistory(message_id, message, is_first = false) {
+  function addHistory(message_id: string, message: string, is_first = false) {
     // リストに追加
-    let history_list = document.getElementById("history_list");
-    let new_li = document.createElement("li");
+    const history_list = document.getElementById("history_list");
+    if (history_list === null) {
+      console.error("history_list is null");
+      return;
+    }
+
+    const new_li = document.createElement("li");
     new_li.className = "bg-gray-200 p-2 mr-1 rounded truncate hover:bg-gray-400";
     new_li.textContent = message;
     new_li.dataset.message_id = message_id;
@@ -154,8 +167,12 @@ import { Utils } from "./utils.js";
   }
 
   // ボタンの有効か無効かを切り替える
-  function toggleButton(id) {
-    let button = document.getElementById(id);
+  function toggleButton(id: string) {
+    const button = document.getElementById(id) as HTMLButtonElement;
+    if (button === null) {
+      console.error("button is null");
+      return;
+    }
     if (button.disabled) {
       button.disabled = false;
     } else {
@@ -177,21 +194,25 @@ import { Utils } from "./utils.js";
 
   // 初期化
   (function initialize() {
-    let history_list = document.getElementById("history_list");
-    removeHistory(history_list.children.length);
-    getHistory();
+    const history_list = document.getElementById("history_list");
+    if (history_list) {
+      removeHistory(history_list.children.length);
+      getHistory();
+    }
     refreshAttatchFile();
     refleshResponseArea();
   })();
 
   // モデル選択のイベントリスナーを登録
   const model_select = document.getElementById("model_select");
-  model_select.addEventListener("change", function () {
-    refreshAttatchFile();
-  });
+  if (model_select) {
+    model_select.addEventListener("change", function () {
+      refreshAttatchFile();
+    });
+  }
 
   // ボタンのイベントリスナーを登録
-  let send_button = document.getElementById("send_button");
+  const send_button = document.getElementById("send_button");
   send_button.addEventListener("click", function () {
     const response_area = document.getElementById("response_area");
     const _request = function(data) {
@@ -210,8 +231,8 @@ import { Utils } from "./utils.js";
       });
     };
 
-    let query_area = document.getElementById("query_area");
-    if (query_area.value === "") {
+    const query_area = document.getElementById("query_area") as HTMLTextAreaElement;
+    if (query_area && query_area.value === "") {
       return;
     }
     toggleButton(this.id)
@@ -228,7 +249,7 @@ import { Utils } from "./utils.js";
     query_area.value = "";
 
     // リクエストbodyの作成
-    let model_select = document.getElementById("model_select");
+    const model_select = document.getElementById("model_select");
     const model = model_select.options[model_select.selectedIndex].value;
 
     const url = Utils.getEndpoint("/app/chat");
