@@ -10,7 +10,7 @@
     <script type="module" src="js/chat.js" defer></script>
 </head>
 <body class="bg-gray-500">
-    <div class="grid grid-cols-[240px_1fr] grid-rows-[100vh]">
+    <div class="grid grid-cols-[260px_1fr] grid-rows-[100vh]">
         <!-- 左サイドバーセクション -->
         <div class="flex flex-col p-4">
             <!-- 固定ボタンセクション -->
