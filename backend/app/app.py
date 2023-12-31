@@ -2,7 +2,15 @@ import os
 
 from chat import chat_request, generate_title
 from custom_exception import RequiredParameterError
-from db import DataType, MessageRole, get_message, insert_message, insert_message_details, select_message_details
+from db import (
+    DataType,
+    MessageRole,
+    delete_message,
+    get_message,
+    insert_message,
+    insert_message_details,
+    select_message_details,
+)
 from fastapi import FastAPI, Response, status
 from fastapi_custom_route import ContextIncludedRoute
 from pydantic import BaseModel
@@ -38,6 +46,15 @@ def history() -> dict[str, list]:
 def get_chat(message_id: int) -> dict[str, list]:
     messages = select_message_details(message_id, required_column={"role", "message", "model"})
     return {"messages": messages}
+
+@app.delete("/chat/{message_id}")
+def delete_chat(message_id: int, response: Response) -> dict[str, str]:
+
+    if len(get_message(message_id)) == 0:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"message": "No message_id"}
+    delete_message(message_id)
+    return {"message": "Succeeed to delete"}
 
 @app.post("/chat")
 def chat(chat_request_body: ChatRequestBody, response: Response) -> dict[str, str]:
