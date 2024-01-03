@@ -158,7 +158,7 @@ import { Utils } from "./utils.js";
       }
     }
 
-    private refreshHistoryList() {
+    public refreshHistoryList() {
       for (let i = 0; i < this.history_list.children.length; i++) {
         const _li = this.history_list.children[i]
         const _div = _li.children[0];
@@ -168,6 +168,16 @@ import { Utils } from "./utils.js";
         _button.className = this.default_button_class;
       }
       return;
+    }
+
+    public removeHistory(message_id: string) {
+      for (let i = 0; i < this.history_list.children.length; i++) {
+        const _li = this.history_list.children[i] as HTMLElement;
+        if (_li.dataset.message_id === message_id) {
+          this.history_list.removeChild(_li);
+          return;
+        }
+      }
     }
 
     public addHistory(message_id: string, message: string, is_first = false) {
@@ -212,6 +222,17 @@ import { Utils } from "./utils.js";
         refleshResponseArea()
         fetchPastMessage(_message_id);
       });
+      message_option_button.addEventListener("click", (event) => {
+        const popup_menu = document.getElementById("popup_menu");
+        if (popup_menu === null) {
+          console.error("popup_menu is null");
+          return;
+        }
+        popup_menu.style.top = `${event.clientY}px`;
+        popup_menu.style.left = `${event.clientX}px`;
+        popup_menu.classList.remove("hidden");
+      });
+
       if (is_first) {
         this.history_list.prepend(new_li);
       } else {
@@ -257,6 +278,36 @@ import { Utils } from "./utils.js";
     refreshAttatchFile();
     refleshResponseArea();
   })();
+
+  // 履歴の削除
+  const delete_history = document.getElementById("delete_history");
+  delete_history?.addEventListener("click", function () {
+    const popup_menu = document.getElementById("popup_menu");
+    if (popup_menu === null) {
+      console.error("popup_menu is null");
+      return;
+    }
+    const history_list = new HistoryList();
+    const message_id = document.getElementById("response_area");
+    if (message_id === null) {
+      console.error("message_id is null");
+      return;
+    }
+    const _message_id = message_id.dataset.message_id;
+    if (_message_id === "" || _message_id === undefined) {
+      console.error("_message_id is empty");
+      return;
+    }
+    let url = Utils.getEndpoint("/app/chat");
+    url += "/" + _message_id;
+    Utils.request(url, "DELETE", null, function (xhr) {
+      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+        history_list.refreshHistoryList();
+        history_list.removeHistory(_message_id);
+      }
+    });
+    popup_menu.classList.add("hidden");
+  }
 
   // モデル選択のイベントリスナーを登録
   const model_select = document.getElementById("model_select");
