@@ -56,7 +56,15 @@
             </div>
 
             <!-- 入力内容表示セクション -->
-            <div id="response_area" class="p-2 border w-11/12 border-gray-300 rounded overflow-auto" data-message_id="">
+            <div id="response_area" class="p-2 border w-11/12 border-gray-300 rounded overflow-auto" data-message_id="" data-history_index="">
+            </div>
+            <!-- ポップアップ -->
+            <div id="popup_menu" class="absolute hidden top-0 left-0">
+                <div class="border rounded">
+                    <ul class="space-y-2">
+                        <li id="delete_history" class="p-2 bg-gray-200 hover:bg-gray-400 text-red-500">削除</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
