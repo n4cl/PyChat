@@ -222,7 +222,9 @@ import { Utils } from "./utils.js";
         refleshResponseArea()
         fetchPastMessage(_message_id);
       });
+      // チャットオプションのイベントリスナーを登録
       message_option_button.addEventListener("click", (event) => {
+        event.stopPropagation(); // 親要素のイベントを発火させない
         const popup_menu = document.getElementById("popup_menu");
         if (popup_menu === null) {
           console.error("popup_menu is null");
@@ -378,5 +380,22 @@ import { Utils } from "./utils.js";
     }
 
   });
+
+  const document_body = document.getElementById("body");
+  if (document_body) {
+    const popup_menu = document.getElementById("popup_menu");
+    if (popup_menu === null) {
+      console.error("popup_menu is null");
+      return;
+    }
+    document_body.addEventListener("click", function () {
+      // ポップアップメニューを非表示にする
+      if (popup_menu.classList.contains("hidden") === false) {
+        popup_menu.classList.add("hidden");
+      }
+    });
+  } else {
+    console.error("document_body is null");
+  }
 
 })();
