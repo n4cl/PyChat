@@ -40,11 +40,14 @@ import { Utils } from "./utils.js";
   function refreshAttatchFile() {
     // モデルの data-attach_file の値で attach_file の表示を切り替える
     const model_select = document.getElementById("model_select");
+    // @ts-ignore
     const is_attach_file = model_select.options[model_select.selectedIndex].dataset.attach_file
     const attach_file = document.getElementById("attach_file");
     if (is_attach_file === "0") {
+      // @ts-ignore
       attach_file.classList.add("hidden");
     } else {
+      // @ts-ignore
       attach_file.classList.remove("hidden");
     }
   }
@@ -109,10 +112,13 @@ import { Utils } from "./utils.js";
         // コードブロックの終了判定
         if (row === "```") {
           is_code_block = false;
+          // @ts-ignore
           sourcecode_area_elm.appendChild(pre_elm);
+          // @ts-ignore
           div_elm.appendChild(sourcecode_area_elm);
           continue;
         }
+        // @ts-ignore
         code_elm.textContent += row + "\n";
         continue;
       }
@@ -309,7 +315,7 @@ import { Utils } from "./utils.js";
       }
     });
     popup_menu.classList.add("hidden");
-  }
+  });
 
   // モデル選択のイベントリスナーを登録
   const model_select = document.getElementById("model_select");
@@ -328,12 +334,14 @@ import { Utils } from "./utils.js";
   send_button.addEventListener("click", function () {
     const response_area = document.getElementById("response_area");
     const history_list = new HistoryList();
+    // @ts-ignore
     const _request = function(data) {
       Utils.request(url, "POST", data, function (xhr) {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
           const response = JSON.parse(xhr.responseText)
 
           // 新規チャットの場合
+          // @ts-ignore
           if (response_area.dataset.message_id === "") {
             // TODO: 新規チャットのタイトルを取得する
             history_list.addHistory(response.message_id, query, true);
@@ -353,27 +361,34 @@ import { Utils } from "./utils.js";
     // 問い合わせ結果の作成準備
     const query = query_area.value;
     let message_id = null;
+    // @ts-ignore
     if (response_area.dataset.message_id === "") {
       generateResponseSection("", query, "You");
     } else {
+      // @ts-ignore
       message_id = response_area.dataset.message_id;
+      // @ts-ignore
       generateResponseSection(message_id, query, "You");
     }
     query_area.value = "";
 
     // リクエストbodyの作成
     const model_select = document.getElementById("model_select");
+    // @ts-ignore
     const model = model_select.options[model_select.selectedIndex].value;
 
     const url = Utils.getEndpoint("/app/chat");
     let body = {query: query, model: model, message_id: message_id};
     const attach_file = document.getElementById("attach_file");
+    // @ts-ignore
     if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
       const reader = new FileReader();
       reader.onload = function() {
+        // @ts-ignore
         body["file"] = reader.result;
         _request(JSON.stringify(body));
       };
+      // @ts-ignore
       reader.readAsDataURL(attach_file.files[0]);
     } else {
       _request(JSON.stringify(body));
