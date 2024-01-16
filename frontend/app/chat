@@ -48,7 +48,7 @@
                     </div>
                 </div>
                 <div class="w-4/5 mb-2">
-                    <textarea id="query_area" class="w-full h-24 p-2 border border-gray-300 rounded resize-none" placeholder="Message..."></textarea>
+                    <textarea id="query_area" class="w-full h-24 p-2 border border-gray-300 rounded resize-none hover:resize-y" placeholder="Message..."></textarea>
                 </div>
                 <div class="w-24">
                     <button id="send_button" class="bg-blue-500 text-white px-5 py-2 rounded hover:bg-blue-600">送信</button>
