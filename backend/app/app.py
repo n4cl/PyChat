@@ -41,17 +41,17 @@ app.router.route_class = ContextIncludedRoute
 
 @app.get("/", response_model=ResponseHello)
 def hello() -> dict[str, str]:
-    return {"message": "Hello World"}
+    return ResponseHello(message="Hello, world!")
 
 @app.get("/history", response_model=ResponseGetHistory)
 def history() -> dict[str, list]:
     res = get_message()
-    return {"history": res}
+    return ResponseGetHistory(history=res)
 
 @app.get("/chat/{message_id}", response_model=ResponseGetChat)
 def get_chat(message_id: int) -> dict[str, list]:
     messages = select_message_details(message_id, required_column={"role", "message", "model"})
-    return {"messages": messages}
+    return ResponseGetChat(messages=messages)
 
 @app.delete("/chat/{message_id}",
             response_model=ResponseDeleteChat,
@@ -59,10 +59,11 @@ def get_chat(message_id: int) -> dict[str, list]:
 def delete_chat(message_id: int) -> dict[str, str]:
 
     if len(get_message(message_id)) == 0:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": "No message_id"})
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND,
+                            content=ErrorResponse(message="No message_id").dict())
 
     delete_message(message_id)
-    return {"message": "Succeeed to delete"}
+    return ResponseDeleteChat(message="Succeeed to delete")
 
 @app.post("/chat", response_model=ResponsePostChat,
           responses={status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse}})
@@ -73,9 +74,11 @@ def chat(chat_request_body: ChatRequestBody) -> dict[str, str]:
     file = chat_request_body.file
     contents = {DataType.TEXT: query}
     if not query:
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": "query is required"})
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
+                            content=ErrorResponse(message="query is required").dict())
     if not model:
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": "model is required"})
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
+                            content=ErrorResponse(message="model is required").dict())
     if file:
         # TODO: file upload
         # contents[DataType.FILE] = file_path
@@ -90,9 +93,10 @@ def chat(chat_request_body: ChatRequestBody) -> dict[str, str]:
     msg, http_status = chat_request(messages, model)
 
     if http_status != status.HTTP_200_OK:
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"message": "Failed to chat"})
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            content=ErrorResponse(message="Failed to chat").dict())
 
     contentes = {DataType.TEXT: msg}
     insert_message_details(mid, MessageRole.ASSISTANT, model, contentes)
 
-    return {"message": msg, "message_id": mid}
+    return ResponsePostChat(message_id=mid, message=msg)
