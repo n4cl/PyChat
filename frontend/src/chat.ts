@@ -31,6 +31,7 @@ import { Utils } from "./utils.js";
   function refleshResponseArea() {
     const main_content = document.getElementById("response_area");
     if (main_content !== null) {
+      main_content.dataset.message_id = "";
       while (main_content.firstChild) {
         main_content.removeChild(main_content.firstChild);
       }
@@ -414,5 +415,12 @@ import { Utils } from "./utils.js";
   } else {
     console.error("document_body is null");
   }
+
+  const new_chat_button = document.getElementById("new_chat_button");
+  new_chat_button?.addEventListener("click", function () {
+    const history_list = new HistoryList();
+    history_list.refreshHistoryList();
+    refleshResponseArea();
+  });
 
 })();
