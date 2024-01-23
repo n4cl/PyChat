@@ -297,12 +297,12 @@ import { Utils } from "./utils.js";
       return;
     }
     const history_list = new HistoryList();
-    const message_id = document.getElementById("response_area");
-    if (message_id === null) {
-      console.error("message_id is null");
+    const response_area = document.getElementById("response_area");
+    if (response_area === null) {
+      console.error("response_area is null");
       return;
     }
-    const _message_id = message_id.dataset.message_id;
+    const _message_id = response_area.dataset.message_id;
     if (_message_id === "" || _message_id === undefined) {
       console.error("_message_id is empty");
       return;
@@ -316,6 +316,7 @@ import { Utils } from "./utils.js";
       }
     });
     popup_menu.classList.add("hidden");
+    refleshResponseArea();
   });
 
   // モデル選択のイベントリスナーを登録
