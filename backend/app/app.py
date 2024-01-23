@@ -7,6 +7,7 @@ from db import (
     MessageRole,
     delete_message,
     get_message,
+    get_messages,
     insert_message,
     insert_message_details,
     select_message_details,
@@ -44,9 +45,13 @@ def hello() -> dict[str, str]:
     return ResponseHello(message="Hello, world!")
 
 @app.get("/history", response_model=ResponseGetHistory)
-def history() -> dict[str, list]:
-    res = get_message()
-    return ResponseGetHistory(history=res)
+def history(page: int=1) -> dict[str, list]:
+
+    res = get_messages(page)
+    return ResponseGetHistory(history=res["history"],
+                              current_page=res["current_page"],
+                              next_page=res["next_page"],
+                              total_page=res["total_pages"])
 
 @app.get("/chat/{message_id}", response_model=ResponseGetChat)
 def get_chat(message_id: int) -> dict[str, list]:

@@ -31,6 +31,7 @@ import { Utils } from "./utils.js";
   function refleshResponseArea() {
     const main_content = document.getElementById("response_area");
     if (main_content !== null) {
+      main_content.dataset.message_id = "";
       while (main_content.firstChild) {
         main_content.removeChild(main_content.firstChild);
       }
@@ -194,7 +195,7 @@ import { Utils } from "./utils.js";
 
       const new_title_div = document.createElement("div");
       new_title_div.className = this.default_div_class;
-      new_title_div.innerText = message;
+      new_title_div.textContent = message;
       new_li.appendChild(new_title_div);
 
       const message_option_button = document.createElement("button");
@@ -333,15 +334,17 @@ import { Utils } from "./utils.js";
   }
   send_button.addEventListener("click", function () {
     const response_area = document.getElementById("response_area");
+    if (response_area === null) {
+      console.error("response_area is null");
+      return;
+    }
     const history_list = new HistoryList();
-    // @ts-ignore
-    const _request = function(data) {
+    const _request = function(data: string) {
       Utils.request(url, "POST", data, function (xhr) {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
           const response = JSON.parse(xhr.responseText)
 
           // 新規チャットの場合
-          // @ts-ignore
           if (response_area.dataset.message_id === "") {
             // TODO: 新規チャットのタイトルを取得する
             history_list.addHistory(response.message_id, query, true);
@@ -378,7 +381,7 @@ import { Utils } from "./utils.js";
     const model = model_select.options[model_select.selectedIndex].value;
 
     const url = Utils.getEndpoint("/app/chat");
-    let body = {query: query, model: model, message_id: message_id};
+    const body = {query: query, model: model, message_id: message_id};
     const attach_file = document.getElementById("attach_file");
     // @ts-ignore
     if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
@@ -412,5 +415,12 @@ import { Utils } from "./utils.js";
   } else {
     console.error("document_body is null");
   }
+
+  const new_chat_button = document.getElementById("new_chat_button");
+  new_chat_button?.addEventListener("click", function () {
+    const history_list = new HistoryList();
+    history_list.refreshHistoryList();
+    refleshResponseArea();
+  });
 
 })();

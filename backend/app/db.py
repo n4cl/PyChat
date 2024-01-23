@@ -71,17 +71,32 @@ def insert_message_details(mid: int, role: str, model: str, contents: dict) -> N
     conn.commit()
     return None
 
-def get_message(message_id=None, is_deleted=0):
-    """Get message"""
+def get_message(message_id: str):
+    """削除されていないメッセージを取得する"""
     conn = connect_db()
     cur = conn.cursor()
-    if message_id:
-        sql = 'SELECT id, title FROM messages WHERE id = ? AND is_deleted = 0;'
-        cur.execute(sql, (message_id, ))
-    else:
-        sql = 'SELECT id, title FROM messages WHERE is_deleted = 0 ORDER BY id DESC;'
-        cur.execute(sql)
+    sql = 'SELECT id, title FROM messages WHERE id = ? AND is_deleted = 0;'
+    cur.execute(sql, (message_id, ))
     return [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
+
+def get_messages(page: int):
+    """複数のメッセージを取得する"""
+    size_per_page = 20
+    offset = (page - 1) * size_per_page
+    conn = connect_db()
+    cur = conn.cursor()
+    sql = 'SELECT id, title FROM messages WHERE is_deleted = 0 ORDER BY id DESC LIMIT 20 OFFSET ?;'
+    cur.execute(sql, (offset, ))
+    messages = [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
+
+    sql = 'SELECT COUNT(*) FROM messages WHERE is_deleted = 0;'
+    cur.execute(sql)
+    count = cur.fetchone()[0]
+    total_pages = count // size_per_page + 1
+    next_page = page + 1 if page < total_pages else None
+
+    return {"history": messages, "current_page": page, "next_page": next_page, "total_pages": total_pages}
+
 
 def delete_message(message_id: int):
     """Delete message"""

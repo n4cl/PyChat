@@ -14,8 +14,8 @@ class ResponseGetHistoryContent(BaseModel):
     """
     Get /historyのレスポンスのhistoryの要素のcontentの要素
     """
-    message_id: int = None
-    title: str = None
+    message_id: int
+    title: str
     class Config:
         extra = Extra.forbid
 
@@ -24,6 +24,9 @@ class ResponseGetHistory(BaseModel):
     Get /historyのレスポンスのhistoryの要素
     """
     history: list[ResponseGetHistoryContent]
+    current_page: int
+    next_page: int = None
+    total_page: int
     class Config:
         extra = Extra.forbid
 
