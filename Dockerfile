@@ -31,7 +31,8 @@ COPY ./ /usr/local/app
 ARG ENV
 RUN if [ "$ENV" = "development" ] ; then \
     cd /tmp && pipenv install --system --dev --ignore-pipfile && \
-    npm install --prefix /usr/local/app/frontend \
+    npm install --prefix /usr/local/app/frontend && \
+    ln -s /usr/local/app/frontend/src /usr/share/nginx/html/ \
 ; else \
     cd /tmp && pipenv install --system --ignore-pipfile && \
     npm install --prefix /usr/local/app/frontend --production \
