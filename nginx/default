@@ -10,6 +10,10 @@ server {
         index chat;
     }
 
+    location /src/ {
+        alias /usr/share/nginx/html/src/;
+    }
+
     location /app/ {
         proxy_read_timeout 300;
         proxy_pass http://127.0.0.1:8000/;
