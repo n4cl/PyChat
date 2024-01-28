@@ -364,15 +364,13 @@ import { Utils } from "./utils.js";
 
     // 問い合わせ結果の作成準備
     const query = query_area.value;
-    let message_id = null;
-    // @ts-ignore
-    if (response_area.dataset.message_id === "") {
+    let response_area_message_id = response_area.dataset.message_id as string;
+    let message_id = null as null | number;
+    if (response_area_message_id === "") {
       generateResponseSection("", query, "You");
     } else {
-      // @ts-ignore
-      message_id = response_area.dataset.message_id;
-      // @ts-ignore
-      generateResponseSection(message_id, query, "You");
+      generateResponseSection(response_area_message_id, query, "You");
+      message_id = parseInt(response_area_message_id);
     }
     query_area.value = "";
 
