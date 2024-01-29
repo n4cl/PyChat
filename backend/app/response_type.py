@@ -34,9 +34,9 @@ class ResponseGetChatMessage(BaseModel):
     """
     Get /chat/{message_id}のレスポンスのmessagesの要素
     """
-    role: str = None
-    content: str = None
-    model: str = None
+    role: str
+    content: str
+    model: str | None = None
     class Config:
         extra = Extra.forbid
 

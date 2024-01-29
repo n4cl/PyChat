@@ -297,12 +297,12 @@ import { Utils } from "./utils.js";
       return;
     }
     const history_list = new HistoryList();
-    const message_id = document.getElementById("response_area");
-    if (message_id === null) {
-      console.error("message_id is null");
+    const response_area = document.getElementById("response_area");
+    if (response_area === null) {
+      console.error("response_area is null");
       return;
     }
-    const _message_id = message_id.dataset.message_id;
+    const _message_id = response_area.dataset.message_id;
     if (_message_id === "" || _message_id === undefined) {
       console.error("_message_id is empty");
       return;
@@ -316,6 +316,7 @@ import { Utils } from "./utils.js";
       }
     });
     popup_menu.classList.add("hidden");
+    refleshResponseArea();
   });
 
   // モデル選択のイベントリスナーを登録
@@ -363,15 +364,13 @@ import { Utils } from "./utils.js";
 
     // 問い合わせ結果の作成準備
     const query = query_area.value;
-    let message_id = null;
-    // @ts-ignore
-    if (response_area.dataset.message_id === "") {
+    let response_area_message_id = response_area.dataset.message_id as string;
+    let message_id = null as null | number;
+    if (response_area_message_id === "") {
       generateResponseSection("", query, "You");
     } else {
-      // @ts-ignore
-      message_id = response_area.dataset.message_id;
-      // @ts-ignore
-      generateResponseSection(message_id, query, "You");
+      generateResponseSection(response_area_message_id, query, "You");
+      message_id = parseInt(response_area_message_id);
     }
     query_area.value = "";
 

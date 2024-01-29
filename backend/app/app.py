@@ -31,7 +31,7 @@ if OPENAI_API_KEY not in os.environ and not os.environ[OPENAI_API_KEY]:
 
 
 class ChatRequestBody(BaseModel):
-    message_id: int = None # Memo: message_id is not required
+    message_id: int | None # Memo: message_id is not required
     query: str
     model: str
     file: str = None
