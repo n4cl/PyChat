@@ -1,9 +1,8 @@
-'use strict';
+"use strict";
 
 import { Utils } from "./utils.js";
 
 (function () {
-
   function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
@@ -42,7 +41,7 @@ import { Utils } from "./utils.js";
     // モデルの data-attach_file の値で attach_file の表示を切り替える
     const model_select = document.getElementById("model_select");
     // @ts-ignore
-    const is_attach_file = model_select.options[model_select.selectedIndex].dataset.attach_file
+    const is_attach_file = model_select.options[model_select.selectedIndex].dataset.attach_file;
     const attach_file = document.getElementById("attach_file");
     if (is_attach_file === "0") {
       // @ts-ignore
@@ -54,7 +53,7 @@ import { Utils } from "./utils.js";
   }
 
   // レスポンスエリアにメッセージを追加する
-  function generateResponseSection(message_id: string, message: string, role="Unknown") {
+  function generateResponseSection(message_id: string, message: string, role = "Unknown") {
     const response_area = document.getElementById("response_area");
     if (response_area === null) {
       console.error("response_area is null");
@@ -63,11 +62,11 @@ import { Utils } from "./utils.js";
     response_area.dataset.message_id = message_id;
     const message_list = message.split("\n");
 
-    const div_elm = document.createElement('div');
+    const div_elm = document.createElement("div");
     div_elm.className = "mb-4";
     response_area.appendChild(div_elm);
 
-    const role_elm = document.createElement('div');
+    const role_elm = document.createElement("div");
     role_elm.className = "font-bold border-b-2 text-white mb-2";
     role_elm.textContent = role;
     div_elm.appendChild(role_elm);
@@ -82,27 +81,27 @@ import { Utils } from "./utils.js";
       const row = message_list[i];
 
       if (is_code_block === false && row.startsWith("```")) {
-        sourcecode_area_elm = document.createElement('div');
+        sourcecode_area_elm = document.createElement("div");
         sourcecode_area_elm.className = "rounded overflow-hidden";
 
         // p タグがあれば追加する
         if (p_elm !== null) {
-          p_elm.className = "pb-2 text-white"
+          p_elm.className = "pb-2 text-white";
           div_elm.appendChild(p_elm);
           p_elm = null;
         }
 
         if (row.length > 3) {
-          const lang_elm = document.createElement('div');
+          const lang_elm = document.createElement("div");
           lang_elm.className = "text-white bg-gray-700 p-2";
           lang_elm.textContent = row.slice(3);
           sourcecode_area_elm.appendChild(lang_elm);
         }
 
         is_code_block = true;
-        pre_elm = document.createElement('pre');
+        pre_elm = document.createElement("pre");
         pre_elm.className = "bg-gray-800 p-2";
-        code_elm = document.createElement('code');
+        code_elm = document.createElement("code");
         code_elm.className = "text-green-200";
         pre_elm.appendChild(code_elm);
         continue;
@@ -125,9 +124,9 @@ import { Utils } from "./utils.js";
       }
 
       // 一般的なテキスト
-      p_elm = document.createElement('p');
+      p_elm = document.createElement("p");
       p_elm.textContent = row;
-      p_elm.className = "pb-2 text-white"
+      p_elm.className = "pb-2 text-white";
       div_elm.appendChild(p_elm);
     }
   }
@@ -139,13 +138,12 @@ import { Utils } from "./utils.js";
     Utils.request(url, "GET", null, function (xhr) {
       // 過去のメッセージをレスポンスエリアに展開する
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText)
+        const response = JSON.parse(xhr.responseText);
 
         for (let i = 0; i < response.messages.length; i++) {
           const user = getUser(response.messages[i].role, response.messages[i].model);
           generateResponseSection(message_id, response.messages[i].content, user);
         }
-
       }
     });
   }
@@ -167,7 +165,7 @@ import { Utils } from "./utils.js";
 
     public refreshHistoryList() {
       for (let i = 0; i < this.history_list.children.length; i++) {
-        const _li = this.history_list.children[i]
+        const _li = this.history_list.children[i];
         const _div = _li.children[0];
         const _button = _li.children[1];
         _li.className = this.default_li_class;
@@ -188,7 +186,6 @@ import { Utils } from "./utils.js";
     }
 
     public addHistory(message_id: string, message: string, is_first = false) {
-
       const new_li = document.createElement("li");
       new_li.dataset.message_id = message_id;
       new_li.className = this.default_li_class;
@@ -226,7 +223,7 @@ import { Utils } from "./utils.js";
         new_title_div.className = "truncate flex-none w-11/12";
         message_option_button.classList.remove("hidden");
         new_li.appendChild(message_option_button);
-        refleshResponseArea()
+        refleshResponseArea();
         fetchPastMessage(_message_id);
       });
       // チャットオプションのイベントリスナーを登録
@@ -265,11 +262,11 @@ import { Utils } from "./utils.js";
   }
 
   function generateHistoryList() {
-    const url = Utils.getEndpoint("/app/history")
+    const url = Utils.getEndpoint("/app/history");
     const history_list = new HistoryList();
     Utils.request(url, "GET", null, function (xhr) {
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText)
+        const response = JSON.parse(xhr.responseText);
         for (let i = 0; i < response.history.length; i++) {
           history_list.addHistory(response.history[i].message_id, response.history[i].title);
         }
@@ -340,10 +337,10 @@ import { Utils } from "./utils.js";
       return;
     }
     const history_list = new HistoryList();
-    const _request = function(data: string) {
+    const _request = function (data: string) {
       Utils.request(url, "POST", data, function (xhr) {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText)
+          const response = JSON.parse(xhr.responseText);
 
           // 新規チャットの場合
           if (response_area.dataset.message_id === "") {
@@ -360,7 +357,7 @@ import { Utils } from "./utils.js";
     if (query_area && query_area.value === "") {
       return;
     }
-    toggleButton(this.id)
+    toggleButton(this.id);
 
     // 問い合わせ結果の作成準備
     const query = query_area.value;
@@ -380,12 +377,12 @@ import { Utils } from "./utils.js";
     const model = model_select.options[model_select.selectedIndex].value;
 
     const url = Utils.getEndpoint("/app/chat");
-    const body = {query: query, model: model, message_id: message_id};
+    const body = { query: query, model: model, message_id: message_id };
     const attach_file = document.getElementById("attach_file");
     // @ts-ignore
     if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
       const reader = new FileReader();
-      reader.onload = function() {
+      reader.onload = function () {
         // @ts-ignore
         body["file"] = reader.result;
         _request(JSON.stringify(body));
@@ -395,7 +392,6 @@ import { Utils } from "./utils.js";
     } else {
       _request(JSON.stringify(body));
     }
-
   });
 
   const document_body = document.getElementById("body");
@@ -421,5 +417,4 @@ import { Utils } from "./utils.js";
     history_list.refreshHistoryList();
     refleshResponseArea();
   });
-
 })();
