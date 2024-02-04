@@ -1,6 +1,9 @@
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
+SQL_GET_MESSAGE = "SELECT id, title FROM messages WHERE id = ? AND is_deleted = 0;"
+SQL_INSERT_MESSAGE = "INSERT INTO messages(title, create_date) VALUES (?, ?);"
+
 t_delta = timedelta(hours=9)
 JST = timezone(t_delta, 'JST')
 
@@ -41,8 +44,7 @@ def insert_message(title: str) -> int:
     """Insert message and return lastrowid"""
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'INSERT INTO messages(title, create_date) VALUES (?, ?);'
-    res = cur.execute(sql, (title, get_jst_now()))
+    res = cur.execute(SQL_INSERT_MESSAGE, (title, get_jst_now()))
     conn.commit()
     return res.lastrowid
 
@@ -75,8 +77,7 @@ def get_message(message_id: str):
     """削除されていないメッセージを取得する"""
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'SELECT id, title FROM messages WHERE id = ? AND is_deleted = 0;'
-    cur.execute(sql, (message_id, ))
+    cur.execute(SQL_GET_MESSAGE, (message_id, ))
     return [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
 def get_messages(page: int):
