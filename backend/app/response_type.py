@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, ConfigDict
 
 
 class ResponseHello(BaseModel):
@@ -6,9 +6,7 @@ class ResponseHello(BaseModel):
     Get /のレスポンス
     """
     message: str = None
-    class Config:
-        # レスポンスに含まれるフィールドを制限する
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid") # レスポンスに含まれるフィールドを制限する
 
 class ResponseGetHistoryContent(BaseModel):
     """
@@ -16,8 +14,7 @@ class ResponseGetHistoryContent(BaseModel):
     """
     message_id: int
     title: str
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 class ResponseGetHistory(BaseModel):
     """
@@ -27,8 +24,7 @@ class ResponseGetHistory(BaseModel):
     current_page: int
     next_page: int = None
     total_page: int
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 class ResponseGetChatMessage(BaseModel):
     """
@@ -37,24 +33,21 @@ class ResponseGetChatMessage(BaseModel):
     role: str
     content: str
     model: str | None = None
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 class ResponseGetChat(BaseModel):
     """
     Get /chat/{message_id}のレスポンス
     """
     messages: list[ResponseGetChatMessage] = None
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 class ResponseDeleteChat(BaseModel):
     """
     Delete /chat/{message_id}のレスポンス
     """
     message: str = None
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 class ResponsePostChat(BaseModel):
     """
@@ -62,10 +55,8 @@ class ResponsePostChat(BaseModel):
     """
     message_id: int = None
     message: str = None
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 class ErrorResponse(BaseModel):
     message: str = None
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
