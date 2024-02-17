@@ -1,7 +1,6 @@
-import openai
 from fastapi import status
 from fastapi_custom_route import LOGGER
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
 
 
 def generate_title(message: str):
@@ -29,7 +28,7 @@ def chat_request(messages: list, model: str):
             temperature=0,
             messages=messages
         )
-    except openai.BadRequestError as e:
+    except BadRequestError as e:
         LOGGER.error(e)
         return "", e.status_code
 
