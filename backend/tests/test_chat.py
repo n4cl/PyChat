@@ -1,7 +1,19 @@
 from unittest.mock import MagicMock, patch
 
-from chat import chat_request
+from chat import chat_request, generate_title
 from fastapi import status
+
+
+def test_generate_title():
+    with patch('chat.chat_request') as mock_chat_request:
+        mock_chat_request.return_value = ("title", status.HTTP_200_OK)
+        message = "test message"
+        title = generate_title(message)
+        assert title == "title"
+
+        mock_chat_request.return_value = ("", status.HTTP_500_INTERNAL_SERVER_ERROR)
+        title = generate_title(message)
+        assert title == "test message"
 
 
 def test_chat_request():
