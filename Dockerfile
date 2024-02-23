@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/python:3.11.6-bullseye
+FROM public.ecr.aws/docker/library/python:3.11.8-bullseye
 
 RUN apt-get update && apt-get -yq install supervisor tzdata less nginx \
   ca-certificates curl gnupg \
