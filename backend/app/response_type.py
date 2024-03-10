@@ -26,6 +26,23 @@ class ResponseGetHistory(BaseModel):
     total_page: int
     model_config = ConfigDict(extra="forbid")
 
+class ResponseGetModel(BaseModel):
+    """
+    Get /modelsのレスポンスのmodelsの要素
+    """
+    id: int
+    name: str
+    is_file_attached: bool
+    model_config = ConfigDict(extra="forbid")
+
+
+class ResponseGetModels(BaseModel):
+    """
+    Get /modelsのレスポンス
+    """
+    models: list[ResponseGetModel]
+    model_config = ConfigDict(extra="forbid")
+
 class ResponseGetChatMessage(BaseModel):
     """
     Get /chat/{message_id}のレスポンスのmessagesの要素
