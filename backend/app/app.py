@@ -12,6 +12,9 @@ from db import (
     insert_message_details,
     select_message_details,
 )
+from db import (
+    get_models as db_get_models,
+)
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi_custom_route import ContextIncludedRoute
@@ -21,6 +24,7 @@ from response_type import (
     ResponseDeleteChat,
     ResponseGetChat,
     ResponseGetHistory,
+    ResponseGetModels,
     ResponseHello,
     ResponsePostChat,
 )
@@ -52,6 +56,11 @@ def history(page: int=1) -> dict[str, list]:
                               current_page=res["current_page"],
                               next_page=res["next_page"],
                               total_page=res["total_pages"])
+
+@app.get("/models", response_model=ResponseGetModels)
+def get_models() -> dict[str, list]:
+    models = db_get_models()
+    return ResponseGetModels(models=models)
 
 @app.get("/chat/{message_id}", response_model=ResponseGetChat)
 def get_chat(message_id: int) -> dict[str, list]:

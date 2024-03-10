@@ -167,13 +167,13 @@ def select_message_details(mid: int,
             message[MessageKey.CONTENT].append({MessageKey.TYPE: MessageType.IMAGE_URL , MessageKey.IMAGE_URL: row[5]})
     return messages
 
-def get_model_list() -> list:
+def get_models() -> list:
     """Get model list"""
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'SELECT model FROM master_model WHERE enable = 1;'
+    sql = 'SELECT id, name, is_file_attached FROM models WHERE enable = 1 ORDER BY id ASC;'
     cur.execute(sql)
-    return [row[0] for row in cur.fetchall()]
+    return [{"id": row[0], "name": row[1], "is_file_attached": bool(row[2])}  for row in cur.fetchall()]
 
 def update_model_enable(model: str, enable: int) -> None:
     """Update model enable"""
