@@ -23,7 +23,7 @@ from response_type import (
     ErrorResponse,
     ResponseDeleteChat,
     ResponseGetChat,
-    ResponseGetHistory,
+    ResponseGetChatMessage,
     ResponseGetModels,
     ResponseHello,
     ResponsePostChat,
@@ -48,11 +48,11 @@ app.router.route_class = ContextIncludedRoute
 def hello() -> dict[str, str]:
     return ResponseHello(message="Hello, world!")
 
-@app.get("/history", response_model=ResponseGetHistory)
-def history(page: int=1) -> dict[str, list]:
+@app.get("/chat", response_model=ResponseGetChat)
+def get_chat(page: int=1) -> dict[str, list]:
 
     res = get_messages(page)
-    return ResponseGetHistory(history=res["history"],
+    return ResponseGetChat(history=res["history"],
                               current_page=res["current_page"],
                               next_page=res["next_page"],
                               total_page=res["total_pages"])
@@ -62,10 +62,10 @@ def get_models() -> dict[str, list]:
     models = db_get_models()
     return ResponseGetModels(models=models)
 
-@app.get("/chat/{message_id}", response_model=ResponseGetChat)
-def get_chat(message_id: int) -> dict[str, list]:
+@app.get("/chat/{message_id}", response_model=ResponseGetChatMessage)
+def get_chat_message(message_id: int) -> dict[str, list]:
     messages = select_message_details(message_id, required_column={"role", "message", "model"})
-    return ResponseGetChat(messages=messages)
+    return ResponseGetChatMessage(messages=messages)
 
 @app.delete("/chat/{message_id}",
             response_model=ResponseDeleteChat,
