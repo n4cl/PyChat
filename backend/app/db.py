@@ -80,14 +80,14 @@ def get_message(message_id: str):
     cur.execute(SQL_GET_MESSAGE, (message_id, ))
     return [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
-def get_messages(page: int):
+def get_messages(page: int, page_size: int):
     """複数のメッセージを取得する"""
-    size_per_page = 20
+    size_per_page = page_size
     offset = (page - 1) * size_per_page
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'SELECT id, title FROM messages WHERE is_deleted = 0 ORDER BY id DESC LIMIT 20 OFFSET ?;'
-    cur.execute(sql, (offset, ))
+    sql = 'SELECT id, title FROM messages WHERE is_deleted = 0 ORDER BY id DESC LIMIT ? OFFSET ?;'
+    cur.execute(sql, (page_size, offset, ))
     messages = [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
     sql = 'SELECT COUNT(*) FROM messages WHERE is_deleted = 0;'

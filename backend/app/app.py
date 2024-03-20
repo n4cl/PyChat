@@ -49,9 +49,9 @@ def hello() -> dict[str, str]:
     return ResponseHello(message="Hello, world!")
 
 @app.get("/chat", response_model=ResponseGetChat)
-def get_chat(page: int=1) -> dict[str, list]:
+def get_chat(page_no: int=1, page_size: int=20) -> dict[str, list]:
 
-    res = get_messages(page)
+    res = get_messages(page_no, page_size)
     return ResponseGetChat(history=res["history"],
                               current_page=res["current_page"],
                               next_page=res["next_page"],
@@ -64,7 +64,7 @@ def get_models() -> dict[str, list]:
 
 @app.get("/chat/{message_id}", response_model=ResponseGetChatMessage)
 def get_chat_message(message_id: int) -> dict[str, list]:
-    messages = select_message_details(message_id, required_column={"role", "message", "model"})
+    messages = select_message_details(message_id, required_column={"role", "message", "model", "create_date"})
     return ResponseGetChatMessage(messages=messages)
 
 @app.delete("/chat/{message_id}",
