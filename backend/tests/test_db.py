@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
-from db import SQL_GET_MESSAGE, SQL_INSERT_MESSAGE, connect_db, get_jst_now, get_message, insert_message
+from db import SQL_GET_MESSAGE, SQL_INSERT_MESSAGE, connect_db, get_jst_now, get_message, get_models, insert_message
 
 
 def test_get_jst_now():
@@ -39,3 +39,11 @@ def test_get_message(mock_connect):
 
     assert result == [{"message_id": 1, "title": 'test title'}]
     mock_cursor.execute.assert_called_once_with(SQL_GET_MESSAGE, (message_id, ))
+
+@patch('sqlite3.connect')
+def test_get_models(mock_connect):
+    mock_connect.return_value = MagicMock()
+    mock_cursor = mock_connect.return_value.cursor.return_value
+    mock_cursor.fetchall.return_value = [[1, "name", 1]]
+    result = get_models()
+    assert result == [{"id": 1, "name": "name", "is_file_attached": 1}]

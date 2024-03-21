@@ -262,7 +262,8 @@ import { Utils } from "./utils.js";
   }
 
   function generateHistoryList() {
-    const url = Utils.getEndpoint("/app/history");
+    let url = Utils.getEndpoint("/app/chat");
+    url += "?page_size=40"
     const history_list = new HistoryList();
     Utils.request(url, "GET", null, function (xhr) {
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {

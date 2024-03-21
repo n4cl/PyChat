@@ -80,14 +80,14 @@ def get_message(message_id: str):
     cur.execute(SQL_GET_MESSAGE, (message_id, ))
     return [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
-def get_messages(page: int):
+def get_messages(page: int, page_size: int):
     """複数のメッセージを取得する"""
-    size_per_page = 20
+    size_per_page = page_size
     offset = (page - 1) * size_per_page
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'SELECT id, title FROM messages WHERE is_deleted = 0 ORDER BY id DESC LIMIT 20 OFFSET ?;'
-    cur.execute(sql, (offset, ))
+    sql = 'SELECT id, title FROM messages WHERE is_deleted = 0 ORDER BY id DESC LIMIT ? OFFSET ?;'
+    cur.execute(sql, (page_size, offset, ))
     messages = [{"message_id": row[0], "title": row[1]} for row in cur.fetchall()]
 
     sql = 'SELECT COUNT(*) FROM messages WHERE is_deleted = 0;'
@@ -167,13 +167,13 @@ def select_message_details(mid: int,
             message[MessageKey.CONTENT].append({MessageKey.TYPE: MessageType.IMAGE_URL , MessageKey.IMAGE_URL: row[5]})
     return messages
 
-def get_model_list() -> list:
+def get_models() -> list:
     """Get model list"""
     conn = connect_db()
     cur = conn.cursor()
-    sql = 'SELECT model FROM master_model WHERE enable = 1;'
+    sql = 'SELECT id, name, is_file_attached FROM models WHERE enable = 1 ORDER BY id ASC;'
     cur.execute(sql)
-    return [row[0] for row in cur.fetchall()]
+    return [{"id": row[0], "name": row[1], "is_file_attached": bool(row[2])}  for row in cur.fetchall()]
 
 def update_model_enable(model: str, enable: int) -> None:
     """Update model enable"""
