@@ -50,6 +50,7 @@ class ResponseGetChatMessageDetail(BaseModel):
     role: str
     content: str
     model: str | None = None
+    create_date: str
     model_config = ConfigDict(extra="forbid")
 
 class ResponseGetChatMessage(BaseModel):

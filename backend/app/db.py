@@ -20,6 +20,7 @@ class MessageKey:
     TEXT = "text"
     IMAGE_URL = "image_url"
     MODEL = "model"
+    create_date = "create_date"
 
 class MessageType:
     TEXT = "text"
@@ -124,7 +125,8 @@ def select_message_details(mid: int,
                   'c.data_type, '
                   'c.message, '
                   'c.file_path, '
-                  'md.model '
+                  'md.model, '
+                  'md.create_date '
            'FROM message_details as md '
            'INNER JOIN contents as c '
            'ON md.id = c.mdid '
@@ -144,6 +146,8 @@ def select_message_details(mid: int,
                 result[MessageKey.CONTENT] = row[4]
             if "model" in required_column:
                 result[MessageKey.MODEL] = row[6]
+            if "create_date" in required_column:
+                result[MessageKey.create_date] = row[7]
             results.append(result)
         return results
 
