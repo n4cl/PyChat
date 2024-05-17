@@ -53,7 +53,12 @@ import { Utils } from "./utils.js";
   }
 
   // レスポンスエリアにメッセージを追加する
-  function generateResponseSection(message_id: string, message: string, role = "Unknown") {
+  function generateResponseSection(message_id: string, message: string, role: string = "Unknown", create_date: string = "") {
+    // create_date が空の場合は現在時刻を取得する
+    if (create_date === "") {
+      const date = new Date();
+      create_date = date.toLocaleString();
+    }
     const response_area = document.getElementById("response_area");
     if (response_area === null) {
       console.error("response_area is null");
@@ -66,10 +71,16 @@ import { Utils } from "./utils.js";
     div_elm.className = "mb-4";
     response_area.appendChild(div_elm);
 
-    const role_elm = document.createElement("div");
-    role_elm.className = "font-bold border-b-2 text-white mb-2";
+    const title_elm = document.createElement("div");
+    title_elm.className = "border-b-2 text-white mb-2";
+    const role_elm = document.createElement("span");
     role_elm.textContent = role;
-    div_elm.appendChild(role_elm);
+    role_elm.className = "font-bold";
+    const create_date_elm = document.createElement("span");
+    create_date_elm.textContent = ": " + create_date;
+    title_elm.appendChild(role_elm);
+    title_elm.appendChild(create_date_elm);
+    div_elm.appendChild(title_elm);
 
     let p_elm = null;
     let sourcecode_area_elm = null;
@@ -142,7 +153,7 @@ import { Utils } from "./utils.js";
 
         for (let i = 0; i < response.messages.length; i++) {
           const user = getUser(response.messages[i].role, response.messages[i].model);
-          generateResponseSection(message_id, response.messages[i].content, user);
+          generateResponseSection(message_id, response.messages[i].content, user, response.messages[i].create_date);
         }
       }
     });
