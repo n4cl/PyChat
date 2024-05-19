@@ -52,6 +52,12 @@ import { Utils } from "./utils.js";
     }
   }
 
+  // テキストエリアの高さを調整する
+  function adjustHeight(elm: HTMLTextAreaElement) {
+    elm.style.height = "auto";
+    elm.style.height = elm.scrollHeight + "px";
+  }
+
   // レスポンスエリアにメッセージを追加する
   function generateResponseSection(message_id: string, message: string, role: string = "Unknown", create_date: string = "") {
     // create_date が空の場合は現在時刻を取得する
@@ -336,12 +342,22 @@ import { Utils } from "./utils.js";
     });
   }
 
+  // 入力フォームのイベントリスナーを登録
+  const query_area = document.getElementById("query_area") as HTMLTextAreaElement;
+  if (query_area === null) {
+    console.error("query_area is null");
+    return;
+  }
+  adjustHeight(query_area);
+  query_area.addEventListener("input", () => adjustHeight(query_area));
+
   // ボタンのイベントリスナーを登録
   const send_button = document.getElementById("send_button");
   if (send_button === null) {
     console.error("send_button is null");
     return;
   }
+
   send_button.addEventListener("click", function () {
     const response_area = document.getElementById("response_area");
     if (response_area === null) {
@@ -366,9 +382,10 @@ import { Utils } from "./utils.js";
     };
 
     const query_area = document.getElementById("query_area") as HTMLTextAreaElement;
-    if (query_area && query_area.value === "") {
+    if (query_area && query_area.value.trim() === "") {
       return;
     }
+
     toggleButton(this.id);
 
     // 問い合わせ結果の作成準備
