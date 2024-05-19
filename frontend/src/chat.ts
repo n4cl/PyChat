@@ -399,6 +399,7 @@ import { Utils } from "./utils.js";
       message_id = parseInt(response_area_message_id);
     }
     query_area.value = "";
+    adjustHeight(query_area);
 
     // リクエストbodyの作成
     const model_select = document.getElementById("model_select");
