@@ -29,7 +29,7 @@
         </div>
 
         <!-- メインコンテンツセクション -->
-        <div class="grid grid-rows-[1fr_3fr] p-4">
+        <div class="grid grid-rows-[1fr_4fr] p-4">
             <!-- 入力フィールドセクション -->
             <div class="mb-4">
                 <div class="min-w-2/6 mb-2 flex flex-row">
@@ -47,8 +47,8 @@
                         <input type="file" id="attach_file" class="w-full hidden">
                     </div>
                 </div>
-                <div class="w-4/5 mb-2">
-                    <textarea id="query_area" class="w-full h-24 p-2 border border-gray-300 rounded resize-none hover:resize-y" placeholder="Message..."></textarea>
+                <div class="mb-2">
+                    <textarea id="query_area" rows="1" class="w-11/12 p-2 border border-gray-300 rounded resize-none hover:resize-y" placeholder="Message..."></textarea>
                 </div>
                 <div class="w-24">
                     <button id="send_button" class="bg-blue-500 text-white px-5 py-2 rounded hover:bg-blue-600">送信</button>
