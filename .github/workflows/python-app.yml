@@ -2,9 +2,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "develop", "main" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop", "main" ]
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -19,28 +19,38 @@ jobs:
           working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install pipenv
         run: |
           python -m pip install --upgrade pip
           pip install pipenv
+
       - name: Cache pipenv dependencies
         id: cache-pipenv
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.local/share/virtualenvs
-            ./Pipfile.lock
           key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pipenv-
+
       - name: Install dependencies with pipenv
+        if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
           pipenv install --dev
-        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+
+      - name: Check if pipenv cache was hit
+        run: |
+          if [ "${{ steps.cache-pipenv.outputs.cache-hit }}" == "true" ]; then
+            echo "Pipenv cache was hit"
+          else
+            echo "Pipenv cache was not hit"
+          fi
+
       - name: Lint with ruff
         run: |
           pipenv run ruff --output-format=github --config=ruff.toml .
