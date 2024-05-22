@@ -1,8 +1,20 @@
 "use strict";
 
 import { Utils } from "./utils.js";
+import { ElementValidator } from "./utils.js";
 
 (function () {
+  const model_select = ElementValidator.getElementByIdOrThrow<HTMLSelectElement>("model_select");
+  const history_list = ElementValidator.getElementByIdOrThrow<HTMLElement>("history_list");
+  const attach_file = ElementValidator.getElementByIdOrThrow<HTMLInputElement>("attach_file");
+  const response_area = ElementValidator.getElementByIdOrThrow<HTMLElement>("response_area");
+  const new_chat_button = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("new_chat_button");
+  const document_body = ElementValidator.getElementByIdOrThrow<HTMLElement>("body");
+  const send_button = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("send_button");
+  const query_area = ElementValidator.getElementByIdOrThrow<HTMLTextAreaElement>("query_area");
+  const popup_menu = ElementValidator.getElementByIdOrThrow<HTMLElement>("popup_menu");
+  const delete_history = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("delete_history");
+
   function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
@@ -18,7 +30,6 @@ import { Utils } from "./utils.js";
 
   function removeHistory(count: number) {
     // リストの子要素を全て削除
-    const history_list = document.getElementById("history_list");
     if (history_list !== null) {
       for (let i = 0; i < count; i++) {
         history_list.removeChild(history_list.children[0]);
@@ -28,26 +39,20 @@ import { Utils } from "./utils.js";
 
   // レスポンスエリアをリフレッシュする
   function refleshResponseArea() {
-    const main_content = document.getElementById("response_area");
-    if (main_content !== null) {
-      main_content.dataset.message_id = "";
-      while (main_content.firstChild) {
-        main_content.removeChild(main_content.firstChild);
+    if (response_area !== null) {
+      response_area.dataset.message_id = "";
+      while (response_area.firstChild) {
+        response_area.removeChild(response_area.firstChild);
       }
     }
   }
 
   function refreshAttatchFile() {
     // モデルの data-attach_file の値で attach_file の表示を切り替える
-    const model_select = document.getElementById("model_select");
-    // @ts-ignore
     const is_attach_file = model_select.options[model_select.selectedIndex].dataset.attach_file;
-    const attach_file = document.getElementById("attach_file");
     if (is_attach_file === "0") {
-      // @ts-ignore
       attach_file.classList.add("hidden");
     } else {
-      // @ts-ignore
       attach_file.classList.remove("hidden");
     }
   }
@@ -59,17 +64,18 @@ import { Utils } from "./utils.js";
   }
 
   // レスポンスエリアにメッセージを追加する
-  function generateResponseSection(message_id: string, message: string, role: string = "Unknown", create_date: string = "") {
+  function generateResponseSection(
+    message_id: string,
+    message: string,
+    role: string = "Unknown",
+    create_date: string = "",
+  ) {
     // create_date が空の場合は現在時刻を取得する
     if (create_date === "") {
       const date = new Date();
       create_date = date.toLocaleString();
     }
-    const response_area = document.getElementById("response_area");
-    if (response_area === null) {
-      console.error("response_area is null");
-      return;
-    }
+
     response_area.dataset.message_id = message_id;
     const message_list = message.split("\n");
 
@@ -171,7 +177,7 @@ import { Utils } from "./utils.js";
     default_button_class: string;
 
     constructor() {
-      this.history_list = document.getElementById("history_list") as HTMLElement;
+      this.history_list = history_list;
       this.default_li_class = "bg-gray-200 p-2 mr-1 rounded hover:bg-gray-400 flex flex-row";
       this.default_div_class = "truncate";
       this.default_button_class = "block hidden flex-none w-1/12";
@@ -246,11 +252,7 @@ import { Utils } from "./utils.js";
       // チャットオプションのイベントリスナーを登録
       message_option_button.addEventListener("click", (event) => {
         event.stopPropagation(); // 親要素のイベントを発火させない
-        const popup_menu = document.getElementById("popup_menu");
-        if (popup_menu === null) {
-          console.error("popup_menu is null");
-          return;
-        }
+
         popup_menu.style.top = `${event.clientY}px`;
         popup_menu.style.left = `${event.clientX}px`;
         popup_menu.classList.remove("hidden");
@@ -266,11 +268,7 @@ import { Utils } from "./utils.js";
 
   // ボタンの有効か無効かを切り替える
   function toggleButton(id: string) {
-    const button = document.getElementById(id) as HTMLButtonElement;
-    if (button === null) {
-      console.error("button is null");
-      return;
-    }
+    const button = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>(id);
     if (button.disabled) {
       button.disabled = false;
     } else {
@@ -280,7 +278,7 @@ import { Utils } from "./utils.js";
 
   function generateHistoryList() {
     let url = Utils.getEndpoint("/app/chat");
-    url += "?page_size=40"
+    url += "?page_size=40";
     const history_list = new HistoryList();
     Utils.request(url, "GET", null, function (xhr) {
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
@@ -294,7 +292,6 @@ import { Utils } from "./utils.js";
 
   // 初期化
   (function initialize() {
-    const history_list = document.getElementById("history_list");
     if (history_list) {
       removeHistory(history_list.children.length);
       generateHistoryList();
@@ -304,19 +301,8 @@ import { Utils } from "./utils.js";
   })();
 
   // 履歴の削除
-  const delete_history = document.getElementById("delete_history");
   delete_history?.addEventListener("click", function () {
-    const popup_menu = document.getElementById("popup_menu");
-    if (popup_menu === null) {
-      console.error("popup_menu is null");
-      return;
-    }
     const history_list = new HistoryList();
-    const response_area = document.getElementById("response_area");
-    if (response_area === null) {
-      console.error("response_area is null");
-      return;
-    }
     const _message_id = response_area.dataset.message_id;
     if (_message_id === "" || _message_id === undefined) {
       console.error("_message_id is empty");
@@ -335,7 +321,6 @@ import { Utils } from "./utils.js";
   });
 
   // モデル選択のイベントリスナーを登録
-  const model_select = document.getElementById("model_select");
   if (model_select) {
     model_select.addEventListener("change", function () {
       refreshAttatchFile();
@@ -343,27 +328,11 @@ import { Utils } from "./utils.js";
   }
 
   // 入力フォームのイベントリスナーを登録
-  const query_area = document.getElementById("query_area") as HTMLTextAreaElement;
-  if (query_area === null) {
-    console.error("query_area is null");
-    return;
-  }
   adjustHeight(query_area);
   query_area.addEventListener("input", () => adjustHeight(query_area));
 
   // ボタンのイベントリスナーを登録
-  const send_button = document.getElementById("send_button");
-  if (send_button === null) {
-    console.error("send_button is null");
-    return;
-  }
-
   send_button.addEventListener("click", function () {
-    const response_area = document.getElementById("response_area");
-    if (response_area === null) {
-      console.error("response_area is null");
-      return;
-    }
     const history_list = new HistoryList();
     const _request = function (data: string) {
       Utils.request(url, "POST", data, function (xhr) {
@@ -381,7 +350,6 @@ import { Utils } from "./utils.js";
       });
     };
 
-    const query_area = document.getElementById("query_area") as HTMLTextAreaElement;
     if (query_area && query_area.value.trim() === "") {
       return;
     }
@@ -402,13 +370,10 @@ import { Utils } from "./utils.js";
     adjustHeight(query_area);
 
     // リクエストbodyの作成
-    const model_select = document.getElementById("model_select");
-    // @ts-ignore
     const model = model_select.options[model_select.selectedIndex].value;
 
     const url = Utils.getEndpoint("/app/chat");
     const body = { query: query, model: model, message_id: message_id };
-    const attach_file = document.getElementById("attach_file");
     // @ts-ignore
     if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
       const reader = new FileReader();
@@ -424,24 +389,13 @@ import { Utils } from "./utils.js";
     }
   });
 
-  const document_body = document.getElementById("body");
-  if (document_body) {
-    const popup_menu = document.getElementById("popup_menu");
-    if (popup_menu === null) {
-      console.error("popup_menu is null");
-      return;
+  document_body.addEventListener("click", function () {
+    // ポップアップメニューを非表示にする
+    if (popup_menu.classList.contains("hidden") === false) {
+      popup_menu.classList.add("hidden");
     }
-    document_body.addEventListener("click", function () {
-      // ポップアップメニューを非表示にする
-      if (popup_menu.classList.contains("hidden") === false) {
-        popup_menu.classList.add("hidden");
-      }
-    });
-  } else {
-    console.error("document_body is null");
-  }
+  });
 
-  const new_chat_button = document.getElementById("new_chat_button");
   new_chat_button?.addEventListener("click", function () {
     const history_list = new HistoryList();
     history_list.refreshHistoryList();
