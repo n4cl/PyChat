@@ -5,31 +5,38 @@ class ResponseHello(BaseModel):
     """
     Get /のレスポンス
     """
+
     message: str = None
-    model_config = ConfigDict(extra="forbid") # レスポンスに含まれるフィールドを制限する
+    model_config = ConfigDict(extra="forbid")  # レスポンスに含まれるフィールドを制限する
+
 
 class ResponseGetChatContent(BaseModel):
     """
     Get /historyのレスポンスのhistoryの要素のcontentの要素
     """
+
     message_id: int
     title: str
     model_config = ConfigDict(extra="forbid")
+
 
 class ResponseGetChat(BaseModel):
     """
     Get /historyのレスポンスのhistoryの要素
     """
+
     history: list[ResponseGetChatContent]
     current_page: int
     next_page: int = None
     total_page: int
     model_config = ConfigDict(extra="forbid")
 
+
 class ResponseGetModel(BaseModel):
     """
     Get /modelsのレスポンスのmodelsの要素
     """
+
     id: int
     name: str
     is_file_attached: bool
@@ -40,40 +47,50 @@ class ResponseGetModels(BaseModel):
     """
     Get /modelsのレスポンス
     """
+
     models: list[ResponseGetModel]
     model_config = ConfigDict(extra="forbid")
+
 
 class ResponseGetChatMessageDetail(BaseModel):
     """
     Get /chat/{message_id}のレスポンスのmessagesの要素
     """
+
     role: str
     content: str
     model: str | None = None
     create_date: str
     model_config = ConfigDict(extra="forbid")
 
+
 class ResponseGetChatMessage(BaseModel):
     """
     Get /chat/{message_id}のレスポンス
     """
+
     messages: list[ResponseGetChatMessageDetail] = None
     model_config = ConfigDict(extra="forbid")
+
 
 class ResponseDeleteChat(BaseModel):
     """
     Delete /chat/{message_id}のレスポンス
     """
+
     message: str = None
     model_config = ConfigDict(extra="forbid")
+
 
 class ResponsePostChat(BaseModel):
     """
     Post /chatのレスポンス
     """
+
     message_id: int = None
     message: str = None
     model_config = ConfigDict(extra="forbid")
+
 
 class ErrorResponse(BaseModel):
     message: str = None
