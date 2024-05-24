@@ -1,6 +1,7 @@
 import os
 
-from chat import chat_request, generate_title
+from chat import chat_anthropic, chat_openai, generate_title
+from const import LLMProvider
 from custom_exception import RequiredParameterError
 from db import (
     DataType,
@@ -8,6 +9,7 @@ from db import (
     delete_message,
     get_message,
     get_messages,
+    get_model,
     insert_message,
     insert_message_details,
     select_message_details,
@@ -85,9 +87,19 @@ def delete_chat(message_id: int) -> dict[str, str]:
 def chat(chat_request_body: ChatRequestBody) -> dict[str, str]:
     mid = chat_request_body.message_id
     query = chat_request_body.query
-    model = chat_request_body.model
+    model_id = chat_request_body.model
     file = chat_request_body.file
     contents = {DataType.TEXT: query}
+
+    # モデルの提供者が存在しない場合はエラー
+    model_name, provider_id = get_model(model_id)
+    if provider_id is None:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=ErrorResponse(message="Model not found"))
+    else:
+        try:
+            provider = LLMProvider(provider_id)
+        except ValueError:
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=ErrorResponse(message="Invalid model"))
 
     if file:
         # TODO: file upload
@@ -100,7 +112,11 @@ def chat(chat_request_body: ChatRequestBody) -> dict[str, str]:
 
     insert_message_details(mid, MessageRole.USER, None, contents)
     messages = select_message_details(mid, required_column={"role", "message"})
-    msg, http_status = chat_request(messages, model)
+
+    if provider == LLMProvider.Anthropic:
+        msg, http_status = chat_anthropic(messages, model_name)
+    elif provider == LLMProvider.OpenAI:
+        msg, http_status = chat_openai(messages, model_name)
 
     if http_status != status.HTTP_200_OK:
         return JSONResponse(
@@ -108,6 +124,6 @@ def chat(chat_request_body: ChatRequestBody) -> dict[str, str]:
         )
 
     contentes = {DataType.TEXT: msg}
-    insert_message_details(mid, MessageRole.ASSISTANT, model, contentes)
+    insert_message_details(mid, MessageRole.ASSISTANT, model_name, contentes)
 
     return ResponsePostChat(message_id=mid, message=msg)

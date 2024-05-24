@@ -12,10 +12,10 @@ def remove_db(db_path):
         print("remove db")
 
 
-def create_db(initialize_db=False):
+def create_db(initialize=False):
     filepath = "chat.sqlite"
 
-    if initialize_db:
+    if initialize:
         remove_db(filepath)
 
     conn = sqlite3.connect(filepath)
@@ -109,4 +109,27 @@ def create_db(initialize_db=False):
     conn.commit()
 
 
-create_db()
+def initialize_records():
+    conn = sqlite3.connect("chat.sqlite")
+    cur = conn.cursor()
+
+    # OpenAI, Anthropic を初期値として登録
+    cur.execute(
+        """
+        INSERT INTO model_providers (name) VALUES ("openai"), ("anthropic");
+        """
+    )
+
+    # モデルの初期値を登録
+    cur.execute(
+        """
+        INSERT INTO models (model_providers_id, name, is_file_attached, enable) VALUES (1, "gpt-3", 0, 1), (2, "claude", 0, 1);
+        """
+    )
+
+    conn.commit()
+
+
+if __name__ == "__main__":
+    create_db(initialize=True)
+    print("create db")
