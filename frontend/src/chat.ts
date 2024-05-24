@@ -63,6 +63,27 @@ import { ElementValidator } from "./utils.js";
     elm.style.height = elm.scrollHeight + "px";
   }
 
+  // バックエンドからモデルの取得
+  function fetchModel() {
+    const url = Utils.getEndpoint("/app/models");
+    Utils.request(url, "GET", null, function (xhr) {
+      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        // 初期のモデルを削除する
+        while (model_select.firstChild) {
+          model_select.removeChild(model_select.firstChild);
+        }
+        // モデルを追加する
+        for (let i = 0; i < response.models.length; i++) {
+          const option = document.createElement("option");
+          option.value = response.models[i].id;
+          option.textContent = response.models[i].name;
+          model_select.appendChild(option);
+        }
+      }
+    });
+  }
+
   // レスポンスエリアにメッセージを追加する
   function generateResponseSection(
     message_id: string,
@@ -296,6 +317,7 @@ import { ElementValidator } from "./utils.js";
       removeHistory(history_list.children.length);
       generateHistoryList();
     }
+    fetchModel();
     refreshAttatchFile();
     refleshResponseArea();
   })();
