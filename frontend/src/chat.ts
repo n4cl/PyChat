@@ -116,8 +116,8 @@ import { ElementValidator } from "./utils.js";
     div_elm.appendChild(title_elm);
 
     let p_elm = null;
-    let sourcecode_area_elm = null;
-    let pre_elm = null;
+    let sourcecode_area_elm = document.createElement("div");
+    let pre_elm = document.createElement("pre");
     let code_elm = null;
     let is_code_block = false;
 
@@ -156,10 +156,12 @@ import { ElementValidator } from "./utils.js";
         // コードブロックの終了判定
         if (row === "```") {
           is_code_block = false;
-          // @ts-ignore
           sourcecode_area_elm.appendChild(pre_elm);
-          // @ts-ignore
           div_elm.appendChild(sourcecode_area_elm);
+          // 必要に応じてスクロールバーを追加する
+          if (pre_elm.scrollWidth > pre_elm.clientWidth) {
+            pre_elm.classList.add("overflow-x-scroll");
+          }
           continue;
         }
         // @ts-ignore
