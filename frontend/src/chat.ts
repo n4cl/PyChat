@@ -15,6 +15,13 @@ import { ElementValidator } from "./utils.js";
   const popup_menu = ElementValidator.getElementByIdOrThrow<HTMLElement>("popup_menu");
   const delete_history = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("delete_history");
 
+  interface BodyType {
+    query: string;
+    model: string;
+    message_id: number | null;
+    file?: string | ArrayBuffer | null;
+  }
+
   function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
@@ -164,9 +171,10 @@ import { ElementValidator } from "./utils.js";
           }
           continue;
         }
-        // @ts-ignore
-        code_elm.textContent += row + "\n";
-        continue;
+        if (code_elm !== null) {
+          code_elm.textContent += row + "\n";
+          continue;
+        }
       }
 
       // 一般的なテキスト
@@ -368,11 +376,13 @@ import { ElementValidator } from "./utils.js";
             // TODO: 新規チャットのタイトルを取得する
             history_list.addHistory(response.message_id, query, true);
           }
-          generateResponseSection(response.message_id, response.message, model);
+          generateResponseSection(response.message_id, response.message, model_name);
         }
         toggleButton(send_button.id);
       });
     };
+    const model = model_select.options[model_select.selectedIndex].value;
+    const model_name = model_select.options[model_select.selectedIndex].textContent ?? "Unknown" as string;
 
     if (query_area && query_area.value.trim() === "") {
       return;
@@ -382,7 +392,7 @@ import { ElementValidator } from "./utils.js";
 
     // 問い合わせ結果の作成準備
     const query = query_area.value;
-    let response_area_message_id = response_area.dataset.message_id as string;
+    const response_area_message_id = response_area.dataset.message_id as string;
     let message_id = null as null | number;
     if (response_area_message_id === "") {
       generateResponseSection("", query, "You");
@@ -394,19 +404,15 @@ import { ElementValidator } from "./utils.js";
     adjustHeight(query_area);
 
     // リクエストbodyの作成
-    const model = model_select.options[model_select.selectedIndex].value;
-
     const url = Utils.getEndpoint("/app/chat");
-    const body = { query: query, model: model, message_id: message_id };
-    // @ts-ignore
-    if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
+    const body: BodyType = { query, model, message_id };
+    if (attach_file.classList.contains("hidden") === false && attach_file.files && attach_file.files.length > 0) {
       const reader = new FileReader();
       reader.onload = function () {
-        // @ts-ignore
-        body["file"] = reader.result;
+
+        body.file = reader.result;
         _request(JSON.stringify(body));
       };
-      // @ts-ignore
       reader.readAsDataURL(attach_file.files[0]);
     } else {
       _request(JSON.stringify(body));
