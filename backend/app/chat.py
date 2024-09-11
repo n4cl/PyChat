@@ -26,11 +26,11 @@ def generate_title(message: str):
     """
 
     content = TITLE_PROMPT.format(message=message)
-    default_model = "gpt-3.5-turbo"
-    title, _ = chat_openai([{"role": "user", "content": content}], default_model)
+    default_model = "gpt-4o-mini-2024-07-18"
+    title, http_staus = chat_openai([{"role": "user", "content": content}], default_model)
     if title == "":
         return message.split("\n")[0]
-    return title
+    return title.rstrip()
 
 
 def chat_openai(messages: list, model: str):
