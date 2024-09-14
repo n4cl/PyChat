@@ -21,6 +21,7 @@ RUN echo "Asia/Tokyo" > /etc/timezone \
 # Backend
 RUN pip install --upgrade pip && pip install pipenv
 COPY ./backend/Pipfile ./backend/Pipfile.lock /tmp/
+RUN python /usr/local/app/backend/app/create_db.py
 
 # Middleware
 COPY ./nginx/default /etc/nginx/sites-available/default
