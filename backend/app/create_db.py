@@ -105,7 +105,7 @@ def create_db():
 
 
 def initialize_records():
-    conn = sqlite3.connect("chat.sqlite")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     # OpenAI, Anthropic を初期値として登録
