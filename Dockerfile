@@ -21,7 +21,6 @@ RUN echo "Asia/Tokyo" > /etc/timezone \
 # Backend
 RUN pip install --upgrade pip && pip install pipenv
 COPY ./backend/Pipfile ./backend/Pipfile.lock /tmp/
-RUN python /usr/local/app/backend/app/create_db.py
 
 # Middleware
 COPY ./nginx/default /etc/nginx/sites-available/default
@@ -43,5 +42,8 @@ RUN if [ "$ENV" = "development" ] ; then \
 RUN ln -s /usr/local/app/frontend/app /usr/share/nginx/html
 ENV PATH="/usr/local/app/frontend/node_modules/.bin:${PATH}"
 RUN tsc --project /usr/local/app/frontend/tsconfig.json
+
+# DB の初期化
+RUN python /usr/local/app/backend/app/create_db.py
 
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
