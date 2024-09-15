@@ -15,6 +15,13 @@ import { ElementValidator } from "./utils.js";
   const popup_menu = ElementValidator.getElementByIdOrThrow<HTMLElement>("popup_menu");
   const delete_history = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("delete_history");
 
+  interface BodyType {
+    query: string;
+    model: string;
+    message_id: number | null;
+    file?: string | ArrayBuffer | null;
+  }
+
   function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
@@ -63,6 +70,27 @@ import { ElementValidator } from "./utils.js";
     elm.style.height = elm.scrollHeight + "px";
   }
 
+  // バックエンドからモデルの取得
+  function fetchModel() {
+    const url = Utils.getEndpoint("/app/models");
+    Utils.request(url, "GET", null, function (xhr) {
+      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        // 初期のモデルを削除する
+        while (model_select.firstChild) {
+          model_select.removeChild(model_select.firstChild);
+        }
+        // モデルを追加する
+        for (let i = 0; i < response.models.length; i++) {
+          const option = document.createElement("option");
+          option.value = response.models[i].id;
+          option.textContent = response.models[i].name;
+          model_select.appendChild(option);
+        }
+      }
+    });
+  }
+
   // レスポンスエリアにメッセージを追加する
   function generateResponseSection(
     message_id: string,
@@ -95,8 +123,8 @@ import { ElementValidator } from "./utils.js";
     div_elm.appendChild(title_elm);
 
     let p_elm = null;
-    let sourcecode_area_elm = null;
-    let pre_elm = null;
+    let sourcecode_area_elm = document.createElement("div");
+    let pre_elm = document.createElement("pre");
     let code_elm = null;
     let is_code_block = false;
 
@@ -135,15 +163,18 @@ import { ElementValidator } from "./utils.js";
         // コードブロックの終了判定
         if (row === "```") {
           is_code_block = false;
-          // @ts-ignore
           sourcecode_area_elm.appendChild(pre_elm);
-          // @ts-ignore
           div_elm.appendChild(sourcecode_area_elm);
+          // 必要に応じてスクロールバーを追加する
+          if (pre_elm.scrollWidth > pre_elm.clientWidth) {
+            pre_elm.classList.add("overflow-x-scroll");
+          }
           continue;
         }
-        // @ts-ignore
-        code_elm.textContent += row + "\n";
-        continue;
+        if (code_elm !== null) {
+          code_elm.textContent += row + "\n";
+          continue;
+        }
       }
 
       // 一般的なテキスト
@@ -296,6 +327,7 @@ import { ElementValidator } from "./utils.js";
       removeHistory(history_list.children.length);
       generateHistoryList();
     }
+    fetchModel();
     refreshAttatchFile();
     refleshResponseArea();
   })();
@@ -344,11 +376,13 @@ import { ElementValidator } from "./utils.js";
             // TODO: 新規チャットのタイトルを取得する
             history_list.addHistory(response.message_id, query, true);
           }
-          generateResponseSection(response.message_id, response.message, model);
+          generateResponseSection(response.message_id, response.message, model_name);
         }
         toggleButton(send_button.id);
       });
     };
+    const model = model_select.options[model_select.selectedIndex].value;
+    const model_name = model_select.options[model_select.selectedIndex].textContent ?? "Unknown" as string;
 
     if (query_area && query_area.value.trim() === "") {
       return;
@@ -358,7 +392,7 @@ import { ElementValidator } from "./utils.js";
 
     // 問い合わせ結果の作成準備
     const query = query_area.value;
-    let response_area_message_id = response_area.dataset.message_id as string;
+    const response_area_message_id = response_area.dataset.message_id as string;
     let message_id = null as null | number;
     if (response_area_message_id === "") {
       generateResponseSection("", query, "You");
@@ -370,19 +404,15 @@ import { ElementValidator } from "./utils.js";
     adjustHeight(query_area);
 
     // リクエストbodyの作成
-    const model = model_select.options[model_select.selectedIndex].value;
-
     const url = Utils.getEndpoint("/app/chat");
-    const body = { query: query, model: model, message_id: message_id };
-    // @ts-ignore
-    if (attach_file.classList.contains("hidden") === false && attach_file.files.length > 0) {
+    const body: BodyType = { query, model, message_id };
+    if (attach_file.classList.contains("hidden") === false && attach_file.files && attach_file.files.length > 0) {
       const reader = new FileReader();
       reader.onload = function () {
-        // @ts-ignore
-        body["file"] = reader.result;
+
+        body.file = reader.result;
         _request(JSON.stringify(body));
       };
-      // @ts-ignore
       reader.readAsDataURL(attach_file.files[0]);
     } else {
       _request(JSON.stringify(body));
