@@ -41,7 +41,7 @@ def get_jst_now() -> str:
 
 def connect_db() -> sqlite3.Connection:
     """Return sqlite3 connection"""
-    filepath = "chat.sqlite"
+    filepath = "db/chat.sqlite"
     conn = sqlite3.connect(filepath)
     return conn
 

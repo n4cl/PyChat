@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-DB_PATH = "/usr/local/app/backend/app/chat.sqlite"
+DB_PATH = "/usr/local/app/backend/app/db/chat.sqlite"
 
 def cereate_select_table_sql(table_name: str) -> str:
     return f'SELECT count(name) FROM sqlite_master WHERE name = "{table_name}";'
@@ -11,10 +11,7 @@ def exists_db(db_path):
     return os.path.exists(db_path)
 
 
-def create_db():
-
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
+def create_db(cur):
 
     res = cur.execute(cereate_select_table_sql("messages"))
 
@@ -101,12 +98,9 @@ def create_db():
             """
         )
 
-    conn.commit()
 
+def initialize_records(cur):
 
-def initialize_records():
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
 
     # OpenAI, Anthropic を初期値として登録
     cur.execute(
@@ -123,13 +117,14 @@ def initialize_records():
         """
     )
 
-    conn.commit()
-
 
 if __name__ == "__main__":
     if exists_db(DB_PATH):
         print("db already exists")
     else:
-        create_db()
-        initialize_records()
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        create_db(cur)
+        initialize_records(cur)
+        conn.commit()
         print("create db")

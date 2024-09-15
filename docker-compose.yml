@@ -14,4 +14,7 @@ services:
             - ./nginx/default:/etc/nginx/sites-available/default
             - /usr/local/app/frontend/node_modules
             - /usr/local/app/frontend/app/js
+            - sqlite_data:/usr/local/app/backend/app/db
         container_name: chat
+volumes:
+    sqlite_data:
