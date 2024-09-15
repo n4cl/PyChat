@@ -27,7 +27,7 @@ class ResponseGetChat(BaseModel):
 
     history: list[ResponseGetChatContent]
     current_page: int
-    next_page: int = None
+    next_page: int | None = None
     total_page: int
     model_config = ConfigDict(extra="forbid")
 
