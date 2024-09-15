@@ -1,25 +1,17 @@
 import os
 import sqlite3
 
+DB_PATH = "/usr/local/app/backend/app/db/chat.sqlite"
 
 def cereate_select_table_sql(table_name: str) -> str:
     return f'SELECT count(name) FROM sqlite_master WHERE name = "{table_name}";'
 
 
-def remove_db(db_path):
-    if os.path.exists(db_path):
-        os.remove(db_path)
-        print("remove db")
+def exists_db(db_path):
+    return os.path.exists(db_path)
 
 
-def create_db(initialize=False):
-    filepath = "chat.sqlite"
-
-    if initialize:
-        remove_db(filepath)
-
-    conn = sqlite3.connect(filepath)
-    cur = conn.cursor()
+def create_db(cur):
 
     res = cur.execute(cereate_select_table_sql("messages"))
 
@@ -106,23 +98,33 @@ def create_db(initialize=False):
             """
         )
 
-    conn.commit()
 
+def initialize_records(cur):
 
-def initialize_records():
-    conn = sqlite3.connect("chat.sqlite")
-    cur = conn.cursor()
 
     # OpenAI, Anthropic を初期値として登録
     cur.execute(
         """
-        INSERT INTO model_providers (name) VALUES (1, "openai"), (1, "anthropic");
+        INSERT INTO model_providers (id, name) VALUES (1, "openai"), (2, "anthropic");
+        """
+    )
+    cur.execute(
+        """
+        INSERT INTO "main"."models" ("id", "model_providers_id", "name", "is_file_attached", "enable")
+        VALUES ('1', '1', 'gpt-4o-2024-08-06', '1', '1'),
+               ('2', '2', 'claude-3-5-sonnet-20240620', '0', '1'),
+               ('3', '1', 'gpt-4o-mini-2024-07-18', '0', '1');
         """
     )
 
-    conn.commit()
-
 
 if __name__ == "__main__":
-    create_db(initialize=True)
-    print("create db")
+    if exists_db(DB_PATH):
+        print("db already exists")
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        create_db(cur)
+        initialize_records(cur)
+        conn.commit()
+        print("create db")
