@@ -1,8 +1,18 @@
-from pydantic import BaseModel, constr
+from typing import Annotated
+
+from pydantic import BaseModel, StringConstraints
 
 
-class ChatRequestBody(BaseModel):
-    message_id: int | None  # Memo: message_id is not required
-    query: constr(min_length=1, strip_whitespace=True)  # 空文字を許可しない
-    model: int
+class RequestPostMessagesBody(BaseModel):
+    title: str
+
+class RequestPutMessagesBody(BaseModel):
+    title: str
+
+class RequestPostChatBody(BaseModel):
+    query: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
+    llm_model_id: int  # プレフィックスに model を利用すると問題が発生する
     file: str = None
+
+class RequestGenerateTitleBody(BaseModel):
+    query: str

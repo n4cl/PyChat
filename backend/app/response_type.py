@@ -54,7 +54,7 @@ class ResponseGetModels(BaseModel):
 
 class ResponseGetChatMessageDetail(BaseModel):
     """
-    Get /chat/{message_id}のレスポンスのmessagesの要素
+    Get /message/{message_id}のレスポンスのmessagesの要素
     """
 
     role: str
@@ -66,7 +66,7 @@ class ResponseGetChatMessageDetail(BaseModel):
 
 class ResponseGetChatMessage(BaseModel):
     """
-    Get /chat/{message_id}のレスポンス
+    Get /message/{message_id}のレスポンス
     """
 
     messages: list[ResponseGetChatMessageDetail] = None
@@ -75,7 +75,7 @@ class ResponseGetChatMessage(BaseModel):
 
 class ResponseDeleteChat(BaseModel):
     """
-    Delete /chat/{message_id}のレスポンス
+    Delete /message/{message_id}のレスポンス
     """
 
     message: str = None
@@ -84,11 +84,19 @@ class ResponseDeleteChat(BaseModel):
 
 class ResponsePostChat(BaseModel):
     """
-    Post /chatのレスポンス
+    Post /message/{message_id}/chatのレスポンス
     """
 
-    message_id: int = None
     message: str = None
+    model_config = ConfigDict(extra="forbid")
+
+
+class ResponsePostMessage(BaseModel):
+    """
+    Post /messagesのレスポンス
+    """
+
+    message_id: int
     model_config = ConfigDict(extra="forbid")
 
 
