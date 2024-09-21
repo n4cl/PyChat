@@ -148,6 +148,8 @@ def select_message_details(mid: int, is_multiple_input: bool = False, required_c
     )
     cur.execute(sql, (mid,))
     rows = cur.fetchall()
+    if len(rows) == 0:
+        return []
 
     if not is_multiple_input:
         results = []

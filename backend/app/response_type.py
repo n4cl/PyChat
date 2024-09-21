@@ -69,7 +69,7 @@ class ResponseGetChatMessage(BaseModel):
     Get /message/{message_id}のレスポンス
     """
 
-    messages: list[ResponseGetChatMessageDetail] = None
+    messages: list[ResponseGetChatMessageDetail]
     model_config = ConfigDict(extra="forbid")
 
 
