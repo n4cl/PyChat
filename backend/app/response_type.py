@@ -100,6 +100,15 @@ class ResponsePostMessage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class ResponsePostGenerateTitle(BaseModel):
+    """
+    Post /generate/titleのレスポンス
+    """
+
+    title: str
+    model_config = ConfigDict(extra="forbid")
+
+
 class ErrorResponse(BaseModel):
     message: str = None
     model_config = ConfigDict(extra="forbid")

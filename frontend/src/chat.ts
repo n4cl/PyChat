@@ -5,7 +5,7 @@ import { ElementValidator } from "./utils.js";
 
 (function () {
   const model_select = ElementValidator.getElementByIdOrThrow<HTMLSelectElement>("model_select");
-  const history_list = ElementValidator.getElementByIdOrThrow<HTMLElement>("history_list");
+  const history_list_elm = ElementValidator.getElementByIdOrThrow<HTMLElement>("history_list");
   const attach_file = ElementValidator.getElementByIdOrThrow<HTMLInputElement>("attach_file");
   const response_area = ElementValidator.getElementByIdOrThrow<HTMLElement>("response_area");
   const new_chat_button = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("new_chat_button");
@@ -30,9 +30,9 @@ import { ElementValidator } from "./utils.js";
 
   function removeHistory(count: number) {
     // リストの子要素を全て削除
-    if (history_list !== null) {
+    if (history_list_elm !== null) {
       for (let i = 0; i < count; i++) {
-        history_list.removeChild(history_list.children[0]);
+        history_list_elm.removeChild(history_list_elm.children[0]);
       }
     }
   }
@@ -200,7 +200,7 @@ import { ElementValidator } from "./utils.js";
     default_button_class: string;
 
     constructor() {
-      this.history_list = history_list;
+      this.history_list = history_list_elm;
       this.default_li_class = "bg-gray-200 p-2 mr-1 rounded hover:bg-gray-400 flex flex-row";
       this.default_div_class = "truncate";
       this.default_button_class = "block hidden flex-none w-1/12";
@@ -342,6 +342,52 @@ import { ElementValidator } from "./utils.js";
   }
 
   async function addMessageToResponseArea(query: string) {
+
+    async function generateAndSaveTitle(query: string, message_id: string) {
+      try {
+        // タイトル生成
+        const title = await generateTitle(query);
+
+        // メッセージの更新
+        await updateMessage(message_id, title);
+
+        // 履歴の追加
+        const historyList = new HistoryList();
+        historyList.addHistory(message_id, title, true);
+
+      } catch (error) {
+        console.error("Error in generateAndSaveTitle:", error);
+      }
+    }
+
+    async function generateTitle(query: string) {
+      const response = await fetch(Utils.getEndpoint("/app/generate/title"), {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate title");
+      }
+
+      const data = await response.json();
+      return data.title;
+    }
+
+    async function updateMessage(message_id: string, title: string) {
+      const response = await fetch(Utils.getEndpoint(`/app/messages/${message_id}`), {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({title})
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update message");
+      }
+    }
+
+    // message のリソースを作成する
     const post_message_response = await fetch(Utils.getEndpoint("/app/messages"),
                                              {"method": "POST",
                                               "headers": {"Content-Type": "application/json"},
@@ -350,18 +396,20 @@ import { ElementValidator } from "./utils.js";
       console.error("Failed to post message");
       return;
     }
-
+    let message_id = "";
     await post_message_response.json().then((response) => {
-      response_area.dataset.message_id = response.message_id;
+      message_id = response.message_id;
+      response_area.dataset.message_id = message_id;
     });
 
     addChatToResponseArea(query);
+    generateAndSaveTitle(query, message_id);
   }
 
   // 初期化
   (function initialize() {
-    if (history_list) {
-      removeHistory(history_list.children.length);
+    if (history_list_elm) {
+      removeHistory(history_list_elm.children.length);
       generateHistoryList();
     }
     fetchModel();

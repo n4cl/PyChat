@@ -12,6 +12,7 @@ from db import (
     insert_message,
     insert_message_details,
     select_message_details,
+    update_message,
 )
 from db import (
     get_messages as get_messages_from_db,
@@ -32,6 +33,7 @@ from response_type import (
     ResponseGetModels,
     ResponseHello,
     ResponsePostChat,
+    ResponsePostGenerateTitle,
     ResponsePostMessage,
 )
 
@@ -116,6 +118,7 @@ def put_messages(message_id: int, request_body: RequestPutMessagesBody) -> dict[
     if title.strip() == "":
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                             content=jsonable_encoder(ErrorResponse(message="Title is required")))
+    update_message(message_id, title)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.post("/messages/{message_id}/chat",
@@ -159,7 +162,12 @@ def post_messages_resouce_chat(message_id: int, request_body: RequestPostChatBod
     return ResponsePostChat(message=msg)
 
 
-@app.post("/generate/title")
+@app.post("/generate/title",
+          response_model=ResponsePostGenerateTitle,
+          responses={status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse}})
 def generate_title_api(request_body: RequestGenerateTitleBody) -> dict[str, str]:
     title = generate_title(request_body.query)
-    return {"title": title}
+    if not title:
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            content=jsonable_encoder(ErrorResponse(message="Failed to generate title")))
+    return ResponsePostGenerateTitle(title=title)
