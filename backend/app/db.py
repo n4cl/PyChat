@@ -55,6 +55,15 @@ def insert_message(title: str) -> int:
     return res.lastrowid
 
 
+def update_message(message_id: int, title: str) -> None:
+    """Update message"""
+    conn = connect_db()
+    cur = conn.cursor()
+    sql = "UPDATE messages SET title = ? WHERE id = ?;"
+    cur.execute(sql, (title, message_id))
+    conn.commit()
+
+
 def insert_message_details(mid: int, role: str, model: str, contents: dict) -> None:
     """Insert message_details"""
 

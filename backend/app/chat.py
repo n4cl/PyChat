@@ -9,11 +9,13 @@ from openai import OpenAI
 
 TITLE_PROMPT = (
     "入力された内容を要約してタイトルを生成してください。\n"
-    "また生成場合は出力フォーマットにしたがってください。\n\n"
+    "また出力フォーマットにしたがってください。\n\n"
     "## 出力フォーマット\n"
     "文字列\n\n"
+    "## 入力例\n"
+    "ここにメッセージが入ります。\n\n"
     "## 出力例\n"
-    "これはタイトル！\n\n"
+    "タイトルA\n\n"
     "## 入力された内容\n"
     "{message}\n\n"
     "## タイトル\n"
@@ -29,7 +31,7 @@ def generate_title(message: str):
     default_model = "gpt-4o-mini-2024-07-18"
     title, http_staus = chat_openai([{"role": "user", "content": content}], default_model)
     if title == "":
-        return message.split("\n")[0]
+        return ""
     return title.rstrip()
 
 
