@@ -186,14 +186,14 @@ def select_message_details(mid: int, is_multiple_input: bool = False, required_c
             message[MessageKey.CONTENT].append({MessageKey.TYPE: MessageType.IMAGE_URL, MessageKey.IMAGE_URL: row[5]})
     return messages
 
-def get_model(_id) -> tuple[str, int] | None:
+def get_model(_id) -> tuple[str, int] | tuple[None, None]:
     conn = connect_db()
     cur = conn.cursor()
     sql = "SELECT name, model_providers_id FROM models WHERE id = ?;"
     cur.execute(sql, (_id,))
     row = cur.fetchone()
     if row is None:
-        return None
+        return None, None
     return row[0], row[1]
 
 
