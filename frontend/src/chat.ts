@@ -5,7 +5,7 @@ import { ElementValidator } from "./utils.js";
 
 (function () {
   const model_select = ElementValidator.getElementByIdOrThrow<HTMLSelectElement>("model_select");
-  const history_list = ElementValidator.getElementByIdOrThrow<HTMLElement>("history_list");
+  const history_list_elm = ElementValidator.getElementByIdOrThrow<HTMLElement>("history_list");
   const attach_file = ElementValidator.getElementByIdOrThrow<HTMLInputElement>("attach_file");
   const response_area = ElementValidator.getElementByIdOrThrow<HTMLElement>("response_area");
   const new_chat_button = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("new_chat_button");
@@ -14,13 +14,6 @@ import { ElementValidator } from "./utils.js";
   const query_area = ElementValidator.getElementByIdOrThrow<HTMLTextAreaElement>("query_area");
   const popup_menu = ElementValidator.getElementByIdOrThrow<HTMLElement>("popup_menu");
   const delete_history = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("delete_history");
-
-  interface BodyType {
-    query: string;
-    model: string;
-    message_id: number | null;
-    file?: string | ArrayBuffer | null;
-  }
 
   function getUser(role: string, model: string) {
     // ユーザーを識別する
@@ -37,9 +30,9 @@ import { ElementValidator } from "./utils.js";
 
   function removeHistory(count: number) {
     // リストの子要素を全て削除
-    if (history_list !== null) {
+    if (history_list_elm !== null) {
       for (let i = 0; i < count; i++) {
-        history_list.removeChild(history_list.children[0]);
+        history_list_elm.removeChild(history_list_elm.children[0]);
       }
     }
   }
@@ -93,7 +86,6 @@ import { ElementValidator } from "./utils.js";
 
   // レスポンスエリアにメッセージを追加する
   function generateResponseSection(
-    message_id: string,
     message: string,
     role: string = "Unknown",
     create_date: string = "",
@@ -104,7 +96,6 @@ import { ElementValidator } from "./utils.js";
       create_date = date.toLocaleString();
     }
 
-    response_area.dataset.message_id = message_id;
     const message_list = message.split("\n");
 
     const div_elm = document.createElement("div");
@@ -187,7 +178,7 @@ import { ElementValidator } from "./utils.js";
 
   function fetchPastMessage(message_id: string) {
     // 履歴から選択したメッセージを取得する
-    const path = "/app/chat/" + message_id;
+    const path = "/app/messages/" + message_id;
     const url = Utils.getEndpoint(path);
     Utils.request(url, "GET", null, function (xhr) {
       // 過去のメッセージをレスポンスエリアに展開する
@@ -196,8 +187,9 @@ import { ElementValidator } from "./utils.js";
 
         for (let i = 0; i < response.messages.length; i++) {
           const user = getUser(response.messages[i].role, response.messages[i].model);
-          generateResponseSection(message_id, response.messages[i].content, user, response.messages[i].create_date);
+          generateResponseSection(response.messages[i].content, user, response.messages[i].create_date);
         }
+        response_area.dataset.message_id = message_id;
       }
     });
   }
@@ -208,7 +200,7 @@ import { ElementValidator } from "./utils.js";
     default_button_class: string;
 
     constructor() {
-      this.history_list = history_list;
+      this.history_list = history_list_elm;
       this.default_li_class = "bg-gray-200 p-2 mr-1 rounded hover:bg-gray-400 flex flex-row";
       this.default_div_class = "truncate";
       this.default_button_class = "block hidden flex-none w-1/12";
@@ -308,7 +300,7 @@ import { ElementValidator } from "./utils.js";
   }
 
   function generateHistoryList() {
-    let url = Utils.getEndpoint("/app/chat");
+    let url = Utils.getEndpoint("/app/messages");
     url += "?page_size=40";
     const history_list = new HistoryList();
     Utils.request(url, "GET", null, function (xhr) {
@@ -321,10 +313,103 @@ import { ElementValidator } from "./utils.js";
     });
   }
 
+  function addChatToResponseArea(query: string) {
+    request_chat(query).then((response_from_llm) => {
+      if (response_from_llm === null) {
+        // TODO: 失敗した場合はモーダルでエラーを表示しても良いかもしれない
+        return;
+      }
+      const model_name = model_select.options[model_select.selectedIndex].textContent ?? "Unknown" as string;
+      generateResponseSection(response_from_llm, model_name);
+    });
+  }
+
+  async function request_chat(query: string) {
+    const model_id = model_select.options[model_select.selectedIndex].value;
+    const post_chat_response = await fetch(Utils.getEndpoint("/app/messages/" + response_area.dataset.message_id + "/chat"),
+                                            {"method": "POST",
+                                             "headers": {"Content-Type": "application/json"},
+                                             "body": JSON.stringify({"llm_model_id": model_id,
+                                                                     "query": query})});
+    if (!post_chat_response.ok) {
+      console.error("Failed to post chat");
+      return null;
+    }
+    // レスポンスの json の message を返す
+    return post_chat_response.json().then((response) => {
+      return response.message;
+    });
+  }
+
+  async function addMessageToResponseArea(query: string) {
+
+    async function generateAndSaveTitle(query: string, message_id: string) {
+      try {
+        // タイトル生成
+        const title = await generateTitle(query);
+
+        // メッセージの更新
+        await updateMessage(message_id, title);
+
+        // 履歴の追加
+        const historyList = new HistoryList();
+        historyList.addHistory(message_id, title, true);
+
+      } catch (error) {
+        console.error("Error in generateAndSaveTitle:", error);
+      }
+    }
+
+    async function generateTitle(query: string) {
+      const response = await fetch(Utils.getEndpoint("/app/generate/title"), {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate title");
+      }
+
+      const data = await response.json();
+      return data.title;
+    }
+
+    async function updateMessage(message_id: string, title: string) {
+      const response = await fetch(Utils.getEndpoint(`/app/messages/${message_id}`), {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({title})
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update message");
+      }
+    }
+
+    // message のリソースを作成する
+    const post_message_response = await fetch(Utils.getEndpoint("/app/messages"),
+                                             {"method": "POST",
+                                              "headers": {"Content-Type": "application/json"},
+                                              "body": JSON.stringify({"title": query})});
+    if (!post_message_response.ok) {
+      console.error("Failed to post message");
+      return;
+    }
+    let message_id = "";
+    await post_message_response.json().then((response) => {
+      message_id = response.message_id;
+      response_area.dataset.message_id = message_id;
+    });
+
+    addChatToResponseArea(query);
+    generateAndSaveTitle(query, message_id);
+  }
+
   // 初期化
   (function initialize() {
-    if (history_list) {
-      removeHistory(history_list.children.length);
+    if (history_list_elm) {
+      removeHistory(history_list_elm.children.length);
       generateHistoryList();
     }
     fetchModel();
@@ -340,7 +425,7 @@ import { ElementValidator } from "./utils.js";
       console.error("_message_id is empty");
       return;
     }
-    let url = Utils.getEndpoint("/app/chat");
+    let url = Utils.getEndpoint("/app/messages");
     url += "/" + _message_id;
     Utils.request(url, "DELETE", null, function (xhr) {
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
@@ -365,58 +450,25 @@ import { ElementValidator } from "./utils.js";
 
   // ボタンのイベントリスナーを登録
   send_button.addEventListener("click", function () {
-    const history_list = new HistoryList();
-    const _request = function (data: string) {
-      Utils.request(url, "POST", data, function (xhr) {
-        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-
-          // 新規チャットの場合
-          if (response_area.dataset.message_id === "") {
-            // TODO: 新規チャットのタイトルを取得する
-            history_list.addHistory(response.message_id, query, true);
-          }
-          generateResponseSection(response.message_id, response.message, model_name);
-        }
-        toggleButton(send_button.id);
-      });
-    };
-    const model = model_select.options[model_select.selectedIndex].value;
-    const model_name = model_select.options[model_select.selectedIndex].textContent ?? "Unknown" as string;
 
     if (query_area && query_area.value.trim() === "") {
       return;
     }
+    toggleButton(send_button.id);
 
-    toggleButton(this.id);
+    // ユーザーのメッセージをレスポンスエリアに追加する
+    generateResponseSection(query_area.value, "You");
 
-    // 問い合わせ結果の作成準備
-    const query = query_area.value;
-    const response_area_message_id = response_area.dataset.message_id as string;
-    let message_id = null as null | number;
-    if (response_area_message_id === "") {
-      generateResponseSection("", query, "You");
+    const message_id = response_area.dataset.message_id as string;
+    if (message_id === "") {
+      // 新規メッセージ
+      addMessageToResponseArea(query_area.value);
     } else {
-      generateResponseSection(response_area_message_id, query, "You");
-      message_id = parseInt(response_area_message_id);
+      addChatToResponseArea(query_area.value);
     }
     query_area.value = "";
     adjustHeight(query_area);
-
-    // リクエストbodyの作成
-    const url = Utils.getEndpoint("/app/chat");
-    const body: BodyType = { query, model, message_id };
-    if (attach_file.classList.contains("hidden") === false && attach_file.files && attach_file.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = function () {
-
-        body.file = reader.result;
-        _request(JSON.stringify(body));
-      };
-      reader.readAsDataURL(attach_file.files[0]);
-    } else {
-      _request(JSON.stringify(body));
-    }
+    toggleButton(this.id);
   });
 
   document_body.addEventListener("click", function () {

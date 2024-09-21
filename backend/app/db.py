@@ -55,6 +55,15 @@ def insert_message(title: str) -> int:
     return res.lastrowid
 
 
+def update_message(message_id: int, title: str) -> None:
+    """Update message"""
+    conn = connect_db()
+    cur = conn.cursor()
+    sql = "UPDATE messages SET title = ? WHERE id = ?;"
+    cur.execute(sql, (title, message_id))
+    conn.commit()
+
+
 def insert_message_details(mid: int, role: str, model: str, contents: dict) -> None:
     """Insert message_details"""
 
@@ -148,6 +157,8 @@ def select_message_details(mid: int, is_multiple_input: bool = False, required_c
     )
     cur.execute(sql, (mid,))
     rows = cur.fetchall()
+    if len(rows) == 0:
+        return []
 
     if not is_multiple_input:
         results = []
@@ -184,14 +195,14 @@ def select_message_details(mid: int, is_multiple_input: bool = False, required_c
             message[MessageKey.CONTENT].append({MessageKey.TYPE: MessageType.IMAGE_URL, MessageKey.IMAGE_URL: row[5]})
     return messages
 
-def get_model(_id) -> tuple[str, int] | None:
+def get_model(_id) -> tuple[str, int] | tuple[None, None]:
     conn = connect_db()
     cur = conn.cursor()
     sql = "SELECT name, model_providers_id FROM models WHERE id = ?;"
     cur.execute(sql, (_id,))
     row = cur.fetchone()
     if row is None:
-        return None
+        return None, None
     return row[0], row[1]
 
 
