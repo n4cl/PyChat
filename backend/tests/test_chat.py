@@ -14,7 +14,7 @@ def test_generate_title():
 
         mock_chat_request.return_value = ("", status.HTTP_500_INTERNAL_SERVER_ERROR)
         title = generate_title(message)
-        assert title == "test message"
+        assert title == ""
 
 
 def test_chat_openai():
