@@ -15,13 +15,6 @@ import { ElementValidator } from "./utils.js";
   const popup_menu = ElementValidator.getElementByIdOrThrow<HTMLElement>("popup_menu");
   const delete_history = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("delete_history");
 
-  interface BodyType {
-    query: string;
-    model: string;
-    message_id: number | null;
-    file?: string | ArrayBuffer | null;
-  }
-
   function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
@@ -93,7 +86,6 @@ import { ElementValidator } from "./utils.js";
 
   // レスポンスエリアにメッセージを追加する
   function generateResponseSection(
-    message_id: string,
     message: string,
     role: string = "Unknown",
     create_date: string = "",
@@ -104,7 +96,6 @@ import { ElementValidator } from "./utils.js";
       create_date = date.toLocaleString();
     }
 
-    response_area.dataset.message_id = message_id;
     const message_list = message.split("\n");
 
     const div_elm = document.createElement("div");
@@ -187,7 +178,7 @@ import { ElementValidator } from "./utils.js";
 
   function fetchPastMessage(message_id: string) {
     // 履歴から選択したメッセージを取得する
-    const path = "/app/chat/" + message_id;
+    const path = "/app/messages/" + message_id;
     const url = Utils.getEndpoint(path);
     Utils.request(url, "GET", null, function (xhr) {
       // 過去のメッセージをレスポンスエリアに展開する
@@ -196,8 +187,9 @@ import { ElementValidator } from "./utils.js";
 
         for (let i = 0; i < response.messages.length; i++) {
           const user = getUser(response.messages[i].role, response.messages[i].model);
-          generateResponseSection(message_id, response.messages[i].content, user, response.messages[i].create_date);
+          generateResponseSection(response.messages[i].content, user, response.messages[i].create_date);
         }
+        response_area.dataset.message_id = message_id;
       }
     });
   }
@@ -308,7 +300,7 @@ import { ElementValidator } from "./utils.js";
   }
 
   function generateHistoryList() {
-    let url = Utils.getEndpoint("/app/chat");
+    let url = Utils.getEndpoint("/app/messages");
     url += "?page_size=40";
     const history_list = new HistoryList();
     Utils.request(url, "GET", null, function (xhr) {
@@ -319,6 +311,51 @@ import { ElementValidator } from "./utils.js";
         }
       }
     });
+  }
+
+  function addChatToResponseArea(query: string) {
+    request_chat(query).then((response_from_llm) => {
+      if (response_from_llm === null) {
+        // TODO: 失敗した場合はモーダルでエラーを表示しても良いかもしれない
+        return;
+      }
+      const model_name = model_select.options[model_select.selectedIndex].textContent ?? "Unknown" as string;
+      generateResponseSection(response_from_llm, model_name);
+    });
+  }
+
+  async function request_chat(query: string) {
+    const model_id = model_select.options[model_select.selectedIndex].value;
+    const post_chat_response = await fetch(Utils.getEndpoint("/app/messages/" + response_area.dataset.message_id + "/chat"),
+                                            {"method": "POST",
+                                             "headers": {"Content-Type": "application/json"},
+                                             "body": JSON.stringify({"llm_model_id": model_id,
+                                                                     "query": query})});
+    if (!post_chat_response.ok) {
+      console.error("Failed to post chat");
+      return null;
+    }
+    // レスポンスの json の message を返す
+    return post_chat_response.json().then((response) => {
+      return response.message;
+    });
+  }
+
+  async function addMessageToResponseArea(query: string) {
+    const post_message_response = await fetch(Utils.getEndpoint("/app/messages"),
+                                             {"method": "POST",
+                                              "headers": {"Content-Type": "application/json"},
+                                              "body": JSON.stringify({"title": query})});
+    if (!post_message_response.ok) {
+      console.error("Failed to post message");
+      return;
+    }
+
+    await post_message_response.json().then((response) => {
+      response_area.dataset.message_id = response.message_id;
+    });
+
+    addChatToResponseArea(query);
   }
 
   // 初期化
@@ -340,7 +377,7 @@ import { ElementValidator } from "./utils.js";
       console.error("_message_id is empty");
       return;
     }
-    let url = Utils.getEndpoint("/app/chat");
+    let url = Utils.getEndpoint("/app/messages");
     url += "/" + _message_id;
     Utils.request(url, "DELETE", null, function (xhr) {
       if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
@@ -365,58 +402,25 @@ import { ElementValidator } from "./utils.js";
 
   // ボタンのイベントリスナーを登録
   send_button.addEventListener("click", function () {
-    const history_list = new HistoryList();
-    const _request = function (data: string) {
-      Utils.request(url, "POST", data, function (xhr) {
-        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-
-          // 新規チャットの場合
-          if (response_area.dataset.message_id === "") {
-            // TODO: 新規チャットのタイトルを取得する
-            history_list.addHistory(response.message_id, query, true);
-          }
-          generateResponseSection(response.message_id, response.message, model_name);
-        }
-        toggleButton(send_button.id);
-      });
-    };
-    const model = model_select.options[model_select.selectedIndex].value;
-    const model_name = model_select.options[model_select.selectedIndex].textContent ?? "Unknown" as string;
 
     if (query_area && query_area.value.trim() === "") {
       return;
     }
+    toggleButton(send_button.id);
 
-    toggleButton(this.id);
+    // ユーザーのメッセージをレスポンスエリアに追加する
+    generateResponseSection(query_area.value, "You");
 
-    // 問い合わせ結果の作成準備
-    const query = query_area.value;
-    const response_area_message_id = response_area.dataset.message_id as string;
-    let message_id = null as null | number;
-    if (response_area_message_id === "") {
-      generateResponseSection("", query, "You");
+    const message_id = response_area.dataset.message_id as string;
+    if (message_id === "") {
+      // 新規メッセージ
+      addMessageToResponseArea(query_area.value);
     } else {
-      generateResponseSection(response_area_message_id, query, "You");
-      message_id = parseInt(response_area_message_id);
+      addChatToResponseArea(query_area.value);
     }
     query_area.value = "";
     adjustHeight(query_area);
-
-    // リクエストbodyの作成
-    const url = Utils.getEndpoint("/app/chat");
-    const body: BodyType = { query, model, message_id };
-    if (attach_file.classList.contains("hidden") === false && attach_file.files && attach_file.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = function () {
-
-        body.file = reader.result;
-        _request(JSON.stringify(body));
-      };
-      reader.readAsDataURL(attach_file.files[0]);
-    } else {
-      _request(JSON.stringify(body));
-    }
+    toggleButton(this.id);
   });
 
   document_body.addEventListener("click", function () {
