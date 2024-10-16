@@ -166,7 +166,12 @@ def post_messages_resouce_chat(message_id: int, request_body: RequestPostChatBod
           response_model=ResponsePostGenerateTitle,
           responses={status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse}})
 def generate_title_api(request_body: RequestGenerateTitleBody) -> dict[str, str]:
-    title = generate_title(request_body.query)
+    body = request_body.query
+    body = body.strip()
+    if not body:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
+                            content=jsonable_encoder(ErrorResponse(message="query is required")))
+    title = generate_title(body)
     if not title:
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=jsonable_encoder(ErrorResponse(message="Failed to generate title")))
