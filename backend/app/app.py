@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from chat import chat_anthropic, chat_openai, generate_title
@@ -104,9 +105,9 @@ def delete_messages(message_id: int) -> dict[str, str]:
 def post_messages(request_body: RequestPostMessagesBody) -> dict[str, str]:
     title = request_body.title
     if title.strip() == "":
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
-                            content=jsonable_encoder(ErrorResponse(message="Title is required")))
-    draft_title = title.split("\n")[0][:255]
+        draft_title = f"No title {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:')}"
+    else:
+        draft_title = title.split("\n")[0][:255]
     message_id = insert_message(draft_title)
     return ResponsePostMessage(message_id=message_id)
 
