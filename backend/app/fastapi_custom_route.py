@@ -18,6 +18,7 @@ LOGGER = get_logger(__name__)
 @dataclass
 class LogField:
     """ログフィールド"""
+
     IO: str = "I/O"
     TIMESTAMP: str = "timestamp"
     REQUEST_ID: str = "request_id"
@@ -37,6 +38,7 @@ def generate_default_logfield(io: str) -> dict[str, str]:
         LogField.TIMESTAMP: datetime.datetime.fromtimestamp(time.time()).strftime("%Y/%m/%d %H:%M:%S%Z"),
     }
 
+
 class ContextIncludedRoute(APIRoute):
     """カスタムルートクラス"""
 
@@ -54,7 +56,14 @@ class ContextIncludedRoute(APIRoute):
 
             if await request.body():
                 try:
-                    input_field[LogField.BODY] = await request.json()
+                    body = await request.json()
+                    _show_body = body.copy()
+                    if "file" in body:
+                        file_content = body["file"]
+                        if file_content:
+                            _show_body["file"] = f"{file_content[:10]}... (truncated, total size: {len(file_content)})"
+                    input_field[LogField.BODY] = _show_body
+
                 except json.decoder.JSONDecodeError:
                     input_field[LogField.BODY] = (await request.body()).decode("utf-8")
             else:
@@ -69,8 +78,9 @@ class ContextIncludedRoute(APIRoute):
             try:
                 response: Response = await original_route_handler(request)
             except RequestValidationError as err:
-                response = JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
-                                        content=ErrorResponse(message="Invalid parameter").dict())
+                response = JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST, content=ErrorResponse(message="Invalid parameter").dict()
+                )
                 error_field = generate_default_logfield("N/A")
                 error_field[LogField.REQUEST_ID] = request_id
                 error_field[LogField.ERROR] = err.errors()[0]

@@ -34,13 +34,14 @@ def create_db(cur):
             """
             CREATE TABLE message_details (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mid INTEGER NOT NULL,
-                role TEXT NOT NULL,
+                message_id INTEGER NOT NULL,
+                role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
                 model TEXT,
-                create_date TEXT NOT NULL,
-                foreign key (mid) references messages(id)
+                message TEXT,
+                create_date TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (message_id) REFERENCES messages(id)
             );
-        """
+            """
         )
 
     res = cur.execute(cereate_select_table_sql("contents"))
@@ -48,13 +49,15 @@ def create_db(cur):
     if res.fetchone()[0] == 0:
         cur.execute(
             """
-            CREATE TABLE contents (
+            CREATE TABLE file_attachments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mdid INTEGER NOT NULL,
-                data_type TEXT NOT NULL,
-                message TEXT,
-                file_path TEXT,
-                foreign key (mdid) references message_details(id)
+                message_detail_id INTEGER NOT NULL,
+                file_name TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                file_type TEXT,
+                file_size INTEGER,
+                upload_date TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (message_detail_id) REFERENCES message_details(id)
             );
         """
         )
