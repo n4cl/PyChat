@@ -1,11 +1,18 @@
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
+from models.app_coordinator import AppMessage
+from models.db_model import MessageModel
+
 SQL_GET_MESSAGE = "SELECT id, title FROM messages WHERE id = ? AND is_deleted = 0;"
 SQL_INSERT_MESSAGE = "INSERT INTO messages(title, create_date) VALUES (?, ?);"
 
 t_delta = timedelta(hours=9)
 JST = timezone(t_delta, "JST")
+
+class MessageDetailsModel:
+    ROLE = "role"
+    MESSAGE = "message"
 
 
 class MessageRole:
@@ -14,24 +21,9 @@ class MessageRole:
     USER = "user"
 
 
-class MessageKey:
-    ROLE = "role"
-    CONTENT = "content"
-    TYPE = "type"
-    TEXT = "text"
-    IMAGE_URL = "image_url"
-    MODEL = "model"
-    create_date = "create_date"
-
-
 class MessageType:
     TEXT = "text"
     IMAGE_URL = "image_url"
-
-
-class DataType:
-    TEXT = "text"
-    FILE = "file"
 
 
 def get_jst_now() -> str:
@@ -64,27 +56,29 @@ def update_message(message_id: int, title: str) -> None:
     conn.commit()
 
 
-def insert_message_details(mid: int, role: str, model: str, contents: dict) -> None:
+def insert_message_details(mid: int, role: str, model: str, contents: AppMessage) -> None:
     """Insert message_details"""
 
-    def insert_contents(mdid: int, data_type: str, message: str, file_path: str) -> None:
-        """Insert contents"""
-        sql = "INSERT INTO contents(mdid, data_type, message, file_path) VALUES (?, ?, ?, ?);"
-        cur.execute(sql, (mdid, data_type, message, file_path))
+    def insert_message(cur, mid: int, role: str, model: str, message: str) -> None:
+        """Insert message"""
+        sql = "INSERT INTO message_details(message_id, role, model, message, create_date) VALUES (?, ?, ?, ?, ?);"
+        res = cur.execute(sql, (mid, role, model, message, get_jst_now()))
+        return res.lastrowid
+
+    def insert_file(cur, message_detail_id: int, file_name: str, file_type: str, file_path: str) -> None:
+        """Insert file"""
+        sql = "INSERT INTO file_attachments(message_detail_id, file_name, file_type, file_path) VALUES (?, ?, ?, ?);"
+        cur.execute(sql, (message_detail_id, file_name, file_type, file_path))
         return None
 
     conn = connect_db()
     cur = conn.cursor()
-    sql = "INSERT INTO message_details(mid, role, model, create_date) VALUES (?, ?, ?, ?);"
-    res = cur.execute(sql, (mid, role, model, get_jst_now()))
+    _message_detail_id = None
 
-    mdid = res.lastrowid
+    _message_detail_id = insert_message(cur, mid, role, model, contents.message)
 
-    for data_type, message in contents.items():
-        if data_type == DataType.TEXT:
-            insert_contents(mdid, MessageType.TEXT, message, None)
-        elif data_type == DataType.FILE:
-            insert_contents(mdid, MessageType.IMAGE_URL, None, message)
+    if contents.file:
+        insert_file(cur, _message_detail_id, contents.file_name, contents.file_name.split(".")[-1], contents.file)
 
     conn.commit()
     return None
@@ -132,68 +126,46 @@ def delete_message(message_id: int):
     conn.commit()
 
 
-def select_message_details(mid: int, is_multiple_input: bool = False, required_column=None) -> list[dict[str, str]]:
+def select_message_details(mid: int) -> list[MessageModel]:
     """Select message_details"""
-
-    if required_column is None:
-        required_column = {"role", "message"}
 
     conn = connect_db()
     cur = conn.cursor()
     sql = (
-        "SELECT md.id as mdid, "
+        "SELECT md.id, "
         "c.id as cid, "
         "md.role, "
-        "c.data_type, "
-        "c.message, "
+        "c.file_type, "
+        "md.message, "
         "c.file_path, "
         "md.model, "
-        "md.create_date "
+        "md.create_date, "
+        "c.file_name "
         "FROM message_details as md "
-        "INNER JOIN contents as c "
-        "ON md.id = c.mdid "
-        "WHERE mid = ? "
+        "LEFT OUTER JOIN file_attachments as c "
+        "ON md.id = c.message_detail_id "
+        "WHERE message_id = ? "
         "ORDER BY md.id ASC, c.id ASC;"
     )
     cur.execute(sql, (mid,))
     rows = cur.fetchall()
+
     if len(rows) == 0:
         return []
-
-    if not is_multiple_input:
-        results = []
-        # 生のSQLだと綺麗に取得できないのでここで整形する
-        for row in rows:
-            result = {}
-            if "role" in required_column:
-                result[MessageKey.ROLE] = row[2]
-            if "message" in required_column:
-                result[MessageKey.CONTENT] = row[4]
-            if "model" in required_column:
-                result[MessageKey.MODEL] = row[6]
-            if "create_date" in required_column:
-                result[MessageKey.create_date] = row[7]
-            results.append(result)
-        return results
-
-    temp_mdid = rows[0][0]
-    messages = []
-    message = {}
+    result = []
     for row in rows:
-        if temp_mdid != row[0]:
-            temp_mdid = row[0]
-            messages.append(message)
+        _message_model = MessageModel(message_id=row[0],
+                                      role=row[2],
+                                      model=row[6],
+                                      message=row[4],
+                                      file_id=row[1],
+                                      file_path=row[5],
+                                      file_name=row[8],
+                                      create_date=row[7])
+        result.append(_message_model)
+    return result
 
-        if MessageKey.ROLE not in message:
-            message[MessageKey.ROLE] = row[2]
-            message[MessageKey.CONTENT] = []
 
-        file_type = row[3]
-        if file_type == DataType.TEXT:
-            message[MessageKey.CONTENT].append({MessageKey.TYPE: MessageType.TEXT, MessageKey.CONTENT: row[4]})
-        elif file_type == DataType.FILE:
-            message[MessageKey.CONTENT].append({MessageKey.TYPE: MessageType.IMAGE_URL, MessageKey.IMAGE_URL: row[5]})
-    return messages
 
 def get_model(_id) -> tuple[str, int] | tuple[None, None]:
     conn = connect_db()
