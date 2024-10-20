@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel
 
 
 class RequestPostMessagesBody(BaseModel):
@@ -10,9 +8,10 @@ class RequestPutMessagesBody(BaseModel):
     title: str
 
 class RequestPostChatBody(BaseModel):
-    query: Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
+    query: str = None
     llm_model_id: int  # プレフィックスに model を利用すると問題が発生する
     file: str = None
+    file_name: str = None
 
 class RequestGenerateTitleBody(BaseModel):
     query: str

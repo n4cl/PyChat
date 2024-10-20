@@ -52,7 +52,7 @@ def test_chat_anthropic():
         assert status_code == status.HTTP_200_OK
 
         mock_client.return_value.messages.create.assert_called_once_with(
-            model=model, temperature=0, messages=messages, max_tokens=1024
+            model=model, temperature=0, messages=messages, max_tokens=2048
         )
 
     mock_response = MagicMock(spec=httpx.Response)

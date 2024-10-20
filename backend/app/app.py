@@ -1,17 +1,16 @@
+import datetime
 import os
 
-from chat import chat_anthropic, chat_openai, generate_title
+from chat import APIClient, generate_title
 from const import LLMProvider
 from custom_exception import RequiredParameterError
 from db import (
-    DataType,
     MessageRole,
     delete_message,
     get_message,
     get_model,
     insert_message,
     insert_message_details,
-    select_message_details,
     update_message,
 )
 from db import (
@@ -24,6 +23,7 @@ from fastapi import FastAPI, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi_custom_route import ContextIncludedRoute
+from models.app_coordinator import AppMessage
 from request_type import RequestGenerateTitleBody, RequestPostChatBody, RequestPostMessagesBody, RequestPutMessagesBody
 from response_type import (
     ErrorResponse,
@@ -36,6 +36,7 @@ from response_type import (
     ResponsePostGenerateTitle,
     ResponsePostMessage,
 )
+from services.get_messages_message_id import get_message_from_db
 
 OPENAI_API_KEY = "OPENAI_API_KEY"
 if OPENAI_API_KEY not in os.environ and not os.environ[OPENAI_API_KEY]:
@@ -77,8 +78,7 @@ def get_messages_details(message_id: int) -> dict[str, list]:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND, content=jsonable_encoder(ErrorResponse(message="No message_id"))
         )
-    messages = select_message_details(message_id, required_column={"role", "message", "model", "create_date"})
-
+    messages = get_message_from_db(message_id)
     return ResponseGetChatMessage(messages=messages)
 
 
@@ -104,9 +104,9 @@ def delete_messages(message_id: int) -> dict[str, str]:
 def post_messages(request_body: RequestPostMessagesBody) -> dict[str, str]:
     title = request_body.title
     if title.strip() == "":
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
-                            content=jsonable_encoder(ErrorResponse(message="Title is required")))
-    draft_title = title.split("\n")[0][:255]
+        draft_title = f"No title {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:')}"
+    else:
+        draft_title = title.split("\n")[0][:255]
     message_id = insert_message(draft_title)
     return ResponsePostMessage(message_id=message_id)
 
@@ -128,7 +128,9 @@ def put_messages(message_id: int, request_body: RequestPutMessagesBody) -> dict[
 def post_messages_resouce_chat(message_id: int, request_body: RequestPostChatBody) -> dict[str, str]:
     model_id = request_body.llm_model_id
     query = request_body.query
-    # TODO: file upload
+    file = request_body.file
+    file_name = request_body.file_name
+    # TODO: ファイルの検証
 
     # モデルの提供者が存在しない場合はエラー
     model_name, provider_id = get_model(model_id)
@@ -142,21 +144,17 @@ def post_messages_resouce_chat(message_id: int, request_body: RequestPostChatBod
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
                                 content=jsonable_encoder(ErrorResponse(message="Invalid model")))
 
-    messages = select_message_details(message_id, required_column={"role", "message"})
-    messages.append({"role": "user", "content": query})
-
     query = query.strip()
-    if provider == LLMProvider.Anthropic:
-        msg, http_status = chat_anthropic(messages, model_name)
-    elif provider == LLMProvider.OpenAI:
-        msg, http_status = chat_openai(messages, model_name)
+    req_param = AppMessage(message=query, file=file, file_name=file_name)
+    client = APIClient(provider, model_name)
+    request_messages = client.service.make_request_format(message_id, req_param)
+    msg, http_status = client.service.request(request_messages)
 
     if http_status != status.HTTP_200_OK:
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=jsonable_encoder(ErrorResponse(message="Failed to chat")))
-    user_query = {DataType.TEXT: query}
-    llm_response = {DataType.TEXT: msg}
-    insert_message_details(message_id, MessageRole.USER, None, user_query)
+    llm_response = AppMessage(message=msg)
+    insert_message_details(message_id, MessageRole.USER, None, req_param)
     insert_message_details(message_id, MessageRole.ASSISTANT, model_name, llm_response)
 
     return ResponsePostChat(message=msg)
@@ -166,7 +164,12 @@ def post_messages_resouce_chat(message_id: int, request_body: RequestPostChatBod
           response_model=ResponsePostGenerateTitle,
           responses={status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse}})
 def generate_title_api(request_body: RequestGenerateTitleBody) -> dict[str, str]:
-    title = generate_title(request_body.query)
+    body = request_body.query
+    body = body.strip()
+    if not body:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST,
+                            content=jsonable_encoder(ErrorResponse(message="query is required")))
+    title = generate_title(body)
     if not title:
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             content=jsonable_encoder(ErrorResponse(message="Failed to generate title")))

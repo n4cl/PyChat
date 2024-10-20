@@ -15,6 +15,13 @@ import { ElementValidator } from "./utils.js";
   const popup_menu = ElementValidator.getElementByIdOrThrow<HTMLElement>("popup_menu");
   const delete_history = ElementValidator.getElementByIdOrThrow<HTMLButtonElement>("delete_history");
 
+  interface MessageBody {
+    llm_model_id: string;
+    query: string;
+    file?: string;
+    file_name?: string;
+  }
+
   function getUser(role: string, model: string) {
     // ユーザーを識別する
     let user = "Unknown";
@@ -324,13 +331,44 @@ import { ElementValidator } from "./utils.js";
     });
   }
 
+  function readFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          const base64String = reader.result.toString().split(',')[1];
+          // base64 の文字列を返す
+          resolve(base64String);
+        } else {
+          // 失敗した場合はエラーを返す
+          reject(new Error("Failed to read file"));
+        }
+      };
+      reader.onerror = () => {
+        reject(new Error("Error reading file"));
+      };
+      // 読み込んで onloaded を呼び出す
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function request_chat(query: string) {
     const model_id = model_select.options[model_select.selectedIndex].value;
+    const body: MessageBody = {"llm_model_id": model_id, "query": query};
+
+    // attach_file がある場合はファイルを添付する
+    if (attach_file.files !== null && attach_file.files.length > 0) {
+      const file = attach_file.files[0];
+      const base64String = await readFileAsBase64(file);
+      // base64String が取得できた場合はファイルを添付する
+      body["file"] = base64String;
+      // ファイル名を取得する
+      body["file_name"] = file.name;
+    }
     const post_chat_response = await fetch(Utils.getEndpoint("/app/messages/" + response_area.dataset.message_id + "/chat"),
                                             {"method": "POST",
                                              "headers": {"Content-Type": "application/json"},
-                                             "body": JSON.stringify({"llm_model_id": model_id,
-                                                                     "query": query})});
+                                             "body": JSON.stringify(body)});
     if (!post_chat_response.ok) {
       console.error("Failed to post chat");
       return null;
@@ -451,7 +489,8 @@ import { ElementValidator } from "./utils.js";
   // ボタンのイベントリスナーを登録
   send_button.addEventListener("click", function () {
 
-    if (query_area && query_area.value.trim() === "") {
+    // クエリーエリアが空でファイルが選択されていない場合は何もしない
+    if (query_area && query_area.value.trim() === "" && attach_file.files !== null && attach_file.files.length === 0) {
       return;
     }
     toggleButton(send_button.id);
