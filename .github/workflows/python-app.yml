@@ -51,7 +51,7 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          pipenv run ruff --output-format=github --config=ruff.toml .
+          pipenv run ruff check --output-format=github --config=ruff.toml
       - name: Test with pytest
         run: |
           pipenv run pytest
