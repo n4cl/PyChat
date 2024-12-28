@@ -108,7 +108,7 @@ def initialize_records(cur):
     # OpenAI, Anthropic を初期値として登録
     cur.execute(
         """
-        INSERT INTO model_providers (id, name) VALUES (1, "openai"), (2, "anthropic");
+        INSERT INTO model_providers (id, name) VALUES (1, "openai"), (2, "anthropic"), (3, "google");
         """
     )
     cur.execute(
@@ -116,7 +116,8 @@ def initialize_records(cur):
         INSERT INTO "main"."models" ("id", "model_providers_id", "name", "is_file_attached", "enable")
         VALUES ('1', '1', 'gpt-4o-2024-08-06', '1', '1'),
                ('2', '2', 'claude-3-5-sonnet-20240620', '0', '1'),
-               ('3', '1', 'gpt-4o-mini-2024-07-18', '0', '1');
+               ('3', '1', 'gpt-4o-mini-2024-07-18', '0', '1'),
+               ('4', '3', 'gemini-1.5-flash', '1', '1');
         """
     )
 

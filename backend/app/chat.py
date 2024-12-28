@@ -3,10 +3,11 @@ from abc import ABCMeta, abstractmethod
 
 from anthropic import Anthropic
 from anthropic import BadRequestError as AnthropicBadRequestError
-from const import LLMProvider, LLMRequestParameter
-from db import select_message_details
+from const import GeminiRequestParameter, LLMProvider, LLMRequestParameter
+from db import MessageRole, select_message_details
 from fastapi import status
 from fastapi_custom_route import LOGGER
+from google import generativeai as genai
 from models.app_coordinator import AppMessage
 from openai import BadRequestError as OpenAIBadRequestError
 from openai import OpenAI
@@ -137,6 +138,38 @@ class AnthropicAPIRequester(BaseAPIRequester):
         return chat_anthropic(messages, self.model)
 
 
+class GeminiAPIRequester(BaseAPIRequester):
+    def __init__(self, model: str) -> None:
+        super().__init__(model)
+
+    def format_messages(self, role, file_path=None, file_name=None, message=None):
+
+        return {
+            GeminiRequestParameter.ROLE.value: role,
+            GeminiRequestParameter.CONTENT.value: message
+        }
+
+    def make_request_format(self, message_id: int, parameter: AppMessage):
+        messages = []
+        message_details = select_message_details(message_id)
+        for message in message_details:
+            messages.append(self.format_messages(
+                                role= "model" if message.role == MessageRole.ASSISTANT else message.role,
+                                file_path=message.file_path,
+                                file_name=message.file_name,
+                                message=message.message))
+        messages.append(self.format_messages(
+            role=None, # Gemini は role が不要
+            file_path=parameter.file,
+            file_name=parameter.file_name,
+            message=parameter.message
+        ))
+        return messages
+
+    def request(self, messages: list):
+        return chat_gemini(messages, self.model)
+
+
 class APIClient:
     # MEMO: LangChain を導入すると、もっとシンプルに実装できるが、後方互換性を考慮して未導入
     def __init__(self, service_type: LLMProvider, model: str) -> None:
@@ -144,6 +177,8 @@ class APIClient:
             self.service = AnthropicAPIRequester(model=model)
         elif service_type == LLMProvider.OpenAI:
             self.service = OpenAIAPIRequester(model=model)
+        elif service_type == LLMProvider.Gemini:
+            self.service = GeminiAPIRequester(model=model)
         else:
             raise ValueError("Invalid service type")
 
@@ -183,6 +218,20 @@ def chat_anthropic(messages: list, model: str):
         return "", e.status_code
 
     content = response.content[0].text
+    return content, status.HTTP_200_OK
+
+
+def chat_gemini(messages: list, model: str):
+    try:
+        genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+        gemini = genai.GenerativeModel(model)
+        chat = gemini.start_chat(history=messages[:-1])
+        response = chat.send_message(messages[-1][GeminiRequestParameter.CONTENT.value])
+    except Exception as e:
+        LOGGER.error(e)
+        return "", status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    content = response.text
     return content, status.HTTP_200_OK
 
 
